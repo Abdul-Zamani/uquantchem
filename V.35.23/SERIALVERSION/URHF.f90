@@ -54,8 +54,8 @@ SUBROUTINE URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigend
         Neup = Ne / 2
         Nedown = Ne / 2
       elseif(Sz.ne.0) then
-        Neup  = (2*Sz) + (Ne - (2*Sz)) / 2
-        Nedown = (Ne - (2*Sz)) / 2
+        Neup  = (2*Sz) + ((Ne - 1) / 2)
+        Nedown = ((Ne - 1) / 2) 
       endif
 
       write(*,*)
