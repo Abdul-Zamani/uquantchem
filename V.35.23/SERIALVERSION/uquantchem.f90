@@ -444,7 +444,8 @@ PROGRAM uquantchem
                         Pup = 0.0d0
                         Pdown = 0.0d0
                         IF ( .not. DFTC ) CALL URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE., .TRUE.,.FALSE. )
-                        
+                        !AZ
+                        print*,'ETOT after URHF for CISD',ETOT                        
                         
                         IF ( DFTC ) CALL DFT(CORRLEVEL,NATOMS,ATOMS,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
                         & ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE.,.TRUE.,.FALSE.,ETEMP,mu,ENTROPY)
@@ -561,6 +562,11 @@ PROGRAM uquantchem
                         print*,'    Starting Configuration interaction calculation (CISD) '
                         print*,'  ========================================================'
                         
+                        !AZ 
+                        print*,'ETOT before CISD',ETOT
+                        print*,'nucE before CISD',nucE
+                        print*,'ETOT-nucE (E0) before CISD',ETOT-nucE
+
                         CALL CISD(Cup,Cdown,Ints,H0,S,NB,Ne,ETOT-nucE,nuce,ECISD,WRITECICOEF,EHFeigenup,EHFeigendown,LEXCSP,NEEXC,ENEXCM,SPINCONSERVE)
                         
                 ENDIF
