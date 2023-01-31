@@ -13,8 +13,8 @@ SUBROUTINE URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigend
       DOUBLE PRECISION :: PT(NB,NB),Jup(NB,NB),Jdown(NB,NB),Kup(NB,NB),Kdown(NB,NB)
       DOUBLE PRECISION :: Fup(NB,NB),Fdown(NB,NB),G(NB,NB),C1(NB,NB),C2(NB,NB),C3(NB,NB),C4(NB,NB),DE,EOLD,DELTAP,LAMDAu,LAMDAd,MIXING
       DOUBLE PRECISION :: PTold(NB,NB),Pupold(NB,NB),Pdownold(NB,NB),Pups(50,NB,NB),Pdowns(50,NB,NB),Pupt(NB,NB),Pdownt(NB,NB)
-      DOUBLE PRECISION :: ERRSU(50,NB,NB),ERRSD(50,NB,NB),ERRU(NB,NB),ERRD(NB,NB),SH(NB,NB),SL(NB,NB),LAM(NB),EIGENVECT(NB,NB)
-      INTEGER :: I,II,III,L,M,N,Neup,Nedown,Sz,INFO1,INFO2
+      DOUBLE PRECISION :: ERRSU(50,NB,NB),ERRSD(50,NB,NB),ERRU(NB,NB),ERRD(NB,NB),SH(NB,NB),SL(NB,NB),LAM(NB),EIGENVECT(NB,NB),Sz,twoSP1,Nalpha,Nbeta
+      INTEGER :: I,II,III,L,M,N,Neup,Nedown,INFO1,INFO2
       INTEGER :: MAXITER
       INTEGER, EXTERNAL :: ijkl
       LOGICAL :: STARTPRINTDIISIFO
@@ -48,25 +48,28 @@ SUBROUTINE URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigend
               DIISORD = 25
       ENDIF
 
-      !AZ
-      Sz = (Multiplicity - 1) / 2
+      !AZ 
+      !fix double precision print
+      !2sp1 = 2s+1 
+      twoSP1 = Multiplicity 
+      Sz = ((twoSP1) - 1) / 2
       if(Sz.eq.0) then 
-        Neup = Ne / 2
-        Nedown = Ne / 2
+        Neup = (Ne / 2)
+        Nedown = (Ne / 2)
       elseif(Sz.ne.0) then
-        Neup  = (2*Sz) + ((Ne - 1) / 2)
-        Nedown = ((Ne - 1) / 2) 
+        Nbeta  = (Ne-(Sz/0.5)) / 2
+        Nalpha = NBeta + (Sz/0.5)
+        Neup = Nalpha
+        Nedown=Nbeta
       endif
 
       write(*,*)
       print*,'Sz',Sz
       print*,'Multiplicity',MULTIPLICITY
       print*,'NAlpha',Neup
-      print*,'NBeta',Nedown
+      print*,'NBeta',Nedown 
+      print*,'NBas',NB
       write(*,*) 
-
-      !Neup   = ( Ne - MOD(Ne,2) )/2
-      !Nedown = ( Ne + MOD(Ne,2) )/2
 
       Pups = 0.0d0
       Pdowns = 0.0d0
