@@ -12,9 +12,9 @@ FFLAGS =  -fopenmp -ffree-form -ffree-line-length-none -frecursive
 
 F77FLAGS = -fopenmp -ffixed-form -frecursive
 
-LAPACKPATH = /Users/petros/UQUANTCHEM/Src/V.21/lapack-3.4.0
+LAPACKPATH = /usr/lib64
 
-BLASPATH = /Users/petros/UQUANTCHEM/Src/V.21/BLAS
+BLASPATH = /usr/lib64
 
 LIB = -L$(LAPACKPATH) -llapack -L$(BLASPATH) -lblas
 
@@ -37,14 +37,7 @@ SOURCE = datatypemodule.o exchcorrmodule.o functionsmodule.o random.o Afunc.o RH
 	graddipoletensor.o graddipoletensorinhom.o gradpriminhomefieldoverlap.o gethole.o exciteddenssave.o  exitedarbitaryorbitalsave.o numforces.o \
 	readbasisaux.o calcWRI.o calcVRI.o getKvforceRI.o getJvforceRI.o eeintsRI.o Wdensmatstartguess.o Rdensmatstartguess.o vxc2.o gradpotentialgrad.o DKH.o
 
-all: lapack_install blas_install uquantchem
-
-lapack_install:
-	( cd ../lapack-3.4.0; $(MAKE) )
-
-blas_install:
-	( cd ../BLAS; $(MAKE) )
-
+all: uquantchem
 
 uquantchem:  $(SOURCE) 
 	$(FC) $(FFLAGS) $(SOURCE) $(LIB) -o uquantchem.omp

@@ -14,11 +14,11 @@ FFLAGS = -O3 -ffree-form -ffree-line-length-none
 
 F77FLAGS = -O3 -ffixed-form
 
-LAPACKPATH = /Users/petros/lapack-3.4.0
+LAPACKPATH = /usr/lib64
 
-BLASPATH = /Users/petros/BLAS
+BLASPATH = /usr/lib64
 
-SCALAPACKPATH = /Users/petros/scalapack-2.0.2
+SCALAPACKPATH = /Us
 
 LIB = -L$(SCALAPACKPATH) -lscalapack -L$(LAPACKPATH) -llapack -L$(BLASPATH) -lblas 
 
