@@ -226,7 +226,7 @@ SUBROUTINE MP2(Cup,Cdown,Ints,NB,Ne,E0,nuce,EMP2,EHFeigenup,EHFeigendown,SPINCON
         !-----------------------------
         WRITE(*,'(A27,F30.20,A3)')'      Correlation Energy =',EMP2,' au'
         WRITE(*,'(A27,F30.20,A3)')'     Hartree-Fock Energy =',E0,' au'
-        IF ( nuce .NE. 0) WRITE(*,'(A27,F30.20,A3)')' Nuclear repulsio Energy =',nuce,' au'
+        IF ( nuce .NE. 0) WRITE(*,'(A27,F30.20,A3)')' Nuclear repulsion Energy =',nuce,' au'
         IF ( nuce .NE. 0) WRITE(*,'(A27,F30.20,A3)')'            Total Energy =',E0+EMP2+nuce,' au'
         IF ( nuce .EQ. 0) WRITE(*,'(A27,F30.20,A3)')'            Total Energy =',E0+EMP2,' au'
         print*,' '

@@ -1,4 +1,4 @@
-SUBROUTINE relax(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,nucE,Tol,MIX,DIISORD,DIISSTART,NATOMS,NSTEPS,DR,BAS,ATOMS,APPROXEE,CORRLEVEL,PRYSR,PRYSW)
+SUBROUTINE relax(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,MIX,DIISORD,DIISSTART,NATOMS,NSTEPS,DR,BAS,ATOMS,APPROXEE,CORRLEVEL,PRYSR,PRYSW)
         USE datatypemodule
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NB,NRED,Ne,MULTIPLICITY,NATOMS,NSTEPS,DIISORD,DIISSTART
@@ -11,7 +11,7 @@ SUBROUTINE relax(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,
         DOUBLE PRECISION :: ETOT, EHFeigen(NB),EIGENVECT(NB,NB),EHFeigenup(NB),EHFeigendown(NB),Cup(NB,NB),Cdown(NB,NB),DE,EOLD
         DOUBLE PRECISION, INTENT(INOUT) :: gradS(NATOMS,3,NB,NB),gradT(NATOMS,3,NB,NB),gradV(NATOMS,3,NB,NB),gradIntsv(NATOMS,3,NRED),NucE
         DOUBLE PRECISION :: leng, f(3), Rn(3),force(NATOMS,3),T(NB,NB),V(NB,NB)
-        LOGICAL :: CFORCE,SCRATCH
+        LOGICAL :: CFORCE,SCRATCH,BSURHF,
         INTEGER :: I,J,II,JJ
 
         CFORCE = .TRUE.
@@ -31,7 +31,7 @@ SUBROUTINE relax(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,
                 ENDIF
                 
                 IF ( CORRLEVEL .EQ. 'URHF' ) THEN
-                        CALL URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,MIX,DIISORD,DIISSTART,.FALSE.,SCRATCH)
+                        CALL URHF(MULTIPLICITY,BSURHF,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,MIX,DIISORD,DIISSTART,.FALSE.,SCRATCH)
                 ENDIF
                 
                 ! Calculating forces on atoms:

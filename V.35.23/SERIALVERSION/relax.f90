@@ -1,4 +1,4 @@
-SUBROUTINE relax(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,nucE,Tol,FTol,MIX,DIISORD,DIISSTART,NATOMS,NSTEPS,NLSPOINTS,PORDER,DR,BAS,ATOMS,APPROXEE,CORRLEVEL,PRYSR,PRYSW,PULAY, &
+SUBROUTINE relax(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,FTol,MIX,DIISORD,DIISSTART,NATOMS,NSTEPS,NLSPOINTS,PORDER,DR,BAS,ATOMS,APPROXEE,CORRLEVEL,PRYSR,PRYSW,PULAY, &
                  & LORDER,CGORDER,LQ,CGQ,EETOL,ETEMP)
         ! This routine relaxes the nuclear positions using the conjugate
         ! gradient method as described in the book "Scientific computing",
@@ -21,7 +21,7 @@ SUBROUTINE relax(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,
         DOUBLE PRECISION :: leng, f(3), g(3),Rn(3),force(NATOMS,3),T(NB,NB),V(NB,NB),R0(NATOMS,3),R1(NATOMS,3),R2(NATOMS,3)
         DOUBLE PRECISION :: forceold(NATOMS,3),gradold(NATOMS,3),grad(NATOMS,3),E0,E1,E2,E3,E4,const1,const2,DRM,nom,normgrad,DRMOLD
         DOUBLE PRECISION :: Pup(Nb,NB),Pdown(NB,NB),P(NB,NB)
-        LOGICAL :: CFORCE,SCRATCH,LSEARCH,ST
+        LOGICAL :: CFORCE,SCRATCH,LSEARCH,ST,BSURHF
         INTEGER :: I,J,II,JJ,KK,NPOINTS,JSTART,JEND,POLYORDER,NSCF
         DOUBLE PRECISION, ALLOCATABLE :: ENERGY(:),DRF(:)
         REAL :: RANDOM
@@ -61,7 +61,7 @@ SUBROUTINE relax(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,
                 ENDIF
       
                 IF ( CORRLEVEL .EQ. 'URHF' ) THEN
-                        CALL URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol/100,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.)
+                        CALL URHF(MULTIPLICITY,BSURHF,S,H0,Intsv,NB,NRED,Ne,nucE,Tol/100,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.)
                 ENDIF
                 IF ( CORRLEVEL .EQ. 'PBE' .OR. CORRLEVEL .EQ. 'LDA' .OR.  CORRLEVEL .EQ. 'B3LYP' ) THEN
                         CALL DFT(CORRLEVEL,NATOMS,ATOMS,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
@@ -187,7 +187,7 @@ SUBROUTINE relax(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,
                                         Pdown = P/2.0d0
                                 ELSE IF ( CORRLEVEL .EQ. 'URHF' .AND. LSEARCH ) THEN
 
-                                        CALL URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol/100,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.)
+                                        CALL URHF(MULTIPLICITY,BSURHF,S,H0,Intsv,NB,NRED,Ne,nucE,Tol/100,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.)
 
                                 ELSE IF ( ( CORRLEVEL .EQ. 'PBE' .OR. CORRLEVEL .EQ. 'LDA' .OR. CORRLEVEL .EQ. 'B3LYP' ) .AND.  LSEARCH ) THEN
 

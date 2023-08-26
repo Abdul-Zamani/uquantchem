@@ -1,4 +1,4 @@
-SUBROUTINE moleculardynamicssoft(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,nucE,Tol,MIX,DIISORD,DIISSTART,NATOMS,NTIMESTEPS,DT,BAS,ATOMS,APPROXEE,CORRLEVEL,PRYSR,PRYSW, &
+SUBROUTINE moleculardynamicssoft(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,MIX,DIISORD,DIISSTART,NATOMS,NTIMESTEPS,DT,BAS,ATOMS,APPROXEE,CORRLEVEL,PRYSR,PRYSW, &
 & WRITEONFLY,MOVIE,SAMPLERATE,TEMPERATURE,ZEROSCF,XLBOMD,kappa,alpha,CN,PULAY,FIXNSCF,DORDER,LORDER,CGORDER,LQ,CGQ,EETOL,CNSTART,alphastart,kappastart,ETEMP)
         USE datatypemodule
         IMPLICIT NONE
@@ -18,7 +18,7 @@ SUBROUTINE moleculardynamicssoft(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,
         DOUBLE PRECISION :: forceold(NATOMS,3),gradold(NATOMS,3),grad(NATOMS,3),E0,E1,E2,E3,E4,const1,const2,DRM,nom,normgrad,DRMOLD,VCM(3),MTOT
         DOUBLE PRECISION :: Pup(NB,NB),Pdown(NB,NB),P(NB,NB),PNu(DORDER,NB,NB),PNd(DORDER,NB,NB),PT(NB,NB)
         DOUBLE PRECISION :: Jup(NB,NB),Jdown(NB,NB),Kup(NB,NB),Kdown(NB,NB),Fup(NB,NB),Fdown(NB,NB)
-        LOGICAL :: CFORCE,SCRATCH,LSEARCH,ST,RESTART,VELOINIT,ZEROSCFF
+        LOGICAL :: CFORCE,SCRATCH,LSEARCH,ST,RESTART,VELOINIT,ZEROSCFF,BSURHF
         INTEGER :: I,J,II,JJ,KK,NPOINTS,JSTART,JEND,MM,clock,I0,NSCF,I1,I2,FIXNSCFF
         DOUBLE PRECISION :: ENERGY(NTIMESTEPS),VEL(NTIMESTEPS,NATOMS,3),R(NTIMESTEPS,NATOMS,3),EKIN(NTIMESTEPS),EPOT(NTIMESTEPS),TEMP(NTIMESTEPS)
         INTEGER, ALLOCATABLE :: seed(:)
@@ -190,7 +190,7 @@ SUBROUTINE moleculardynamicssoft(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,
                         ENDIF
       
                         IF ( CORRLEVEL .EQ. 'URHF' ) THEN
-                                CALL URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.)
+                                CALL URHF(MULTIPLICITY,BSURHF,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.)
                         ENDIF
                         
                         IF ( CORRLEVEL .EQ. 'PBE' .OR. CORRLEVEL .EQ. 'LDA' .OR.  CORRLEVEL .EQ. 'B3LYP' ) THEN
@@ -297,7 +297,7 @@ SUBROUTINE moleculardynamicssoft(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,
                  ENDIF
       
                  IF ( CORRLEVEL .EQ. 'URHF' ) THEN
-                        CALL URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,FIXNSCFF,.FALSE.,SCRATCH,ZEROSCFF)
+                        CALL URHF(MULTIPLICITY,BSURHF,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,FIXNSCFF,.FALSE.,SCRATCH,ZEROSCFF)
                  ENDIF
 
                  IF ( CORRLEVEL .EQ. 'PBE' .OR. CORRLEVEL .EQ. 'LDA' .OR.  CORRLEVEL .EQ. 'B3LYP' ) THEN

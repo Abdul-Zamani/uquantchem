@@ -1,4 +1,4 @@
-SUBROUTINE URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,FIXNSCF,POUT,SCRATCH,ZEROSCF)
+SUBROUTINE URHF(MULTIPLICITY,BSURHF,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,FIXNSCF,POUT,SCRATCH,ZEROSCF)
       ! This subroutine calculates the self consistent UN-Restricted
       ! Hartree-Fock solution
       IMPLICIT NONE
@@ -14,10 +14,16 @@ SUBROUTINE URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigend
       DOUBLE PRECISION :: Fup(NB,NB),Fdown(NB,NB),G(NB,NB),C1(NB,NB),C2(NB,NB),C3(NB,NB),C4(NB,NB),DE,EOLD,DELTAP,LAMDAu,LAMDAd,MIXING
       DOUBLE PRECISION :: PTold(NB,NB),Pupold(NB,NB),Pdownold(NB,NB),Pups(50,NB,NB),Pdowns(50,NB,NB),Pupt(NB,NB),Pdownt(NB,NB)
       DOUBLE PRECISION :: ERRSU(50,NB,NB),ERRSD(50,NB,NB),ERRU(NB,NB),ERRD(NB,NB),SH(NB,NB),SL(NB,NB),LAM(NB),EIGENVECT(NB,NB),Sz,twoSP1,Nalpha,Nbeta
-      INTEGER :: I,II,III,L,M,N,Neup,Nedown,INFO1,INFO2
+      INTEGER :: I,J,II,III,L,M,N,Neup,Nedown,INFO1,INFO2
       INTEGER :: MAXITER
       INTEGER, EXTERNAL :: ijkl
-      LOGICAL :: STARTPRINTDIISIFO
+      LOGICAL :: STARTPRINTDIISIFO 
+!AZ 8/23
+      DOUBLE PRECISION, ALLOCATABLE :: SABMO(:,:)
+      DOUBLE PRECISION :: SSIJ,S2
+      LOGICAL :: BSURHF 
+!AZ 8/23      
+
 
       MIXING  = MIX
       IF ( FIXNSCF .GT. 0 ) THEN
@@ -78,7 +84,7 @@ SUBROUTINE URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigend
       I = 0
       II = 0
       PTold = 0.0d0
-      STARTPRINTDIISIFO = .FALSE.
+      STARTPRINTDIISIFO =  .FALSE.
         
       !=======================================================
       ! This is used for the zero scf cycle (FAST-MD)
@@ -104,7 +110,7 @@ SUBROUTINE URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigend
                 ENDDO
                 CALL makedens(Cup,NB,Pup)
                 CALL makedens(Cdown,NB,Pdown)
-                NSCF = 0
+                NSCF = 0 
                 RETURN
       ENDIF
       !=====================================================================
@@ -131,8 +137,14 @@ SUBROUTINE URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigend
                 IF ( I .GT. 0 ) THEN
                         CALL makedens(Cup,NB,Pup)
                         CALL makedens(Cdown,NB,Pdown)
+!AZ 8/23                         
+                        IF(I.EQ.1.AND.neUp.EQ.neDown.AND.BSURHF.EQV..TRUE.) THEN
+                          print*,"Breaking initial guess symmetry for open-shell singlets"
+                          Pdown(NeDown:NeDown+1,:)=0.0d0 !destroy homo-lumo 
+                        ENDIF  
+!AZ 8/23
                 ENDIF
-                
+
                 PT = Pup + Pdown
                
                 ! Calculating the change of the total density matrix:
@@ -266,6 +278,26 @@ SUBROUTINE URHF(MULTIPLICITY,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigend
                 IF ( ETOT .GT. -1.0E03) WRITE(*,'(A33,E27.20,A3)'),'      Hartree-Fock energy:   E = ',ETOT,' au'
                 IF ( ETOT .LT. -1.0E03) WRITE(*,'(A33,E30.20,A3)'),'      Hartree-Fock energy:   E = ',ETOT,' au'
                 print*,' '
+!AZ 8/23
+                        ALLOCATE(SABMO(NB,NB))
+                        !SABMO  = Ca*.S.Cb 
+                        SABMO = matmul(matmul(transpose(Cup),S),Cdown)  
+                        SSIJ=0.0d0
+                        do i=1, neup !nalpha
+                          do j=1, nedown !nbeta
+                             SSIJ = SSIJ + SABMO(i,j)**(2.0d0)
+                          enddo 
+                        enddo 
+                            !S2  = sz(sz+1) + nB - |Sij|^2 
+                            S2  = Sz*(Sz+1.0d0) + (Nedown*1.0d0) - SSIJ
+                            print*,'Nalpha',Neup
+                            print*,'Nbeta',Nedown
+                            print*,'SSIJ',SSIJ
+                            print*,'Sz(Sz+1)=', Sz*(Sz+1.0d0)
+                            print*,'S2=',S2 
+                        DEALLOCATE(SABMO)
+!AZ 8/23
+
              ENDIF
      ELSE
              print*,'---------------------------------------------------------'

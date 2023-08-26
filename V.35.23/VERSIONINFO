@@ -3,6 +3,24 @@
 ##############################################################################
 
 ##########################################################
+## Minor fix relative  (V.35.22)    
+###########################################################
+
+(1) Hacking URHF aka UHF code to do DODS for any spin. Added MULTIPLICITY
+logical to readin.f90 and other .f90 files. For MP2 and CISD, specify 
+in the input file:
+SPINCONSERVE .F. 
+if openshell/broken-symmetry UHF determinant is used. Only for 
+SERIALVERSION at the moment. Will need to code <S^2> at some point.
+grep 'MULTIPLICITY' *.f90 to see where I changed subroutines in 
+SERIALVERSION such that they can be changed in OPENMPVERSION and 
+MPIVERSION. IN URHF.f90, added SSIJ,S2,index J to compute S^2. 
+MIX 0.2 -1.0 helps converge open shell molecules like NO.
+Added logical flag BSURHF to get broken symmetry singlets. It works.
+URHF + MULTIPLICITY features above do not work for DFT routines right now
+AZ 8/23
+
+##########################################################
 ## Bugg-fixes relative V.35.21 and all previous versions
 ###########################################################
 
