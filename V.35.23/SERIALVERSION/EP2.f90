@@ -335,10 +335,10 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
        iter=iter+1
 
        if(abs(EPole-EPoleOld).lt.0.0001.or.iter.eq.15) then
-       print*,'Koopmans',EHFeigenup(pole)
-       print*,'D2 (Ha)',E
-       print*,'D2 (eV)',E*27.2114
-       print*,'PS',PS
+       print*,'Koopmans =',EHFeigenup(pole)
+       print*,'D2 (Ha) =',E
+       print*,'D2 (eV) =',E*27.2114
+       print*,'PS =',PS
        conver=.true.
        if(iter.eq.15) then 
          print*,'pole not converged after',iter,'iter'
@@ -405,13 +405,13 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         EMP2AB =  EMP2AB
         EMP2BA =  EMP2BA
         EMP2BB =  EMP2BB/4.0d0
-        print*,'E2AA (Ha)',EMP2AA
-        print*,'E2AB (Ha)',EMP2AB
-        print*,'E2BB (Ha)',EMP2BB
+        print*,'E2AA (Ha) =',EMP2AA
+        print*,'E2AB (Ha) =',EMP2AB
+        print*,'E2BB (Ha) =',EMP2BB
         
         EMP2=EMP2AA+EMP2AB+EMP2BB
 
-        print*,'E2 (Ha)',EMP2
+        print*,'E2 (Ha) =',EMP2
 
         print*,' '
  
