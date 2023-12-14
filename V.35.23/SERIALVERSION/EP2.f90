@@ -19,7 +19,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
                                        tempInts2(:,:,:,:), &
                                        tempInts3(:,:,:,:)
       DOUBLE PRECISION :: TEMP1,DEIJKL
-      LOGICAL :: EXCITE, conver
+      LOGICAL :: EXCITE, conver,osd2
 
       DOUBLE PRECISION :: Sz,twoSP1,Nalpha,Nbeta,SEOld1,SEOld2,&
                           SEOld1AA,SEOld1AB,SEOld2AA,SEOld2AB,&
@@ -195,6 +195,11 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         print*,' '              
         print*,' '
 
+        
+
+        osd2 = .true. !flag for OS
+
+        print*,'OSD2 is',osd2 
 
         do pole=1,10 !!!!! begin pole search
 
@@ -221,6 +226,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         do while(conver.eqv..false.)
        !! print*,'conver',conver 
 !SE1  
+        if(osd2.eqv..false.) then !!os
 !AA
         do i=1,Neup
           do a=NeUp+1,NB 
@@ -231,6 +237,8 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
             enddo
           enddo 
         enddo
+
+       endif !!os
 !AB        
         do i=1,Nedown
           do a=NeUp+1,NB 
@@ -244,6 +252,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         enddo
 
 !SE2
+        if(osd2.eqv..false.) then !!os
 !AA
         do a=Neup+1,Nb
           do i=1,NeUp 
@@ -253,6 +262,8 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
             enddo
           enddo 
         enddo
+     
+        endif !!os 
 !AB        
         do a=Nedown+1,NB
           do i=1,NeUp 
@@ -281,6 +292,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
        SEOld1=0.0d0
        SEOld2=0.0d0
 !SE1  
+        if(osd2.eqv..false.) then !!os
 !AA
         do i=1,Neup
           do a=NeUp+1,NB 
@@ -291,6 +303,9 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
             enddo
           enddo 
         enddo
+
+        endif !!os 
+
 !AB        
         do i=1,Nedown
           do a=NeUp+1,NB 
@@ -304,6 +319,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         enddo
 
 !SE2
+        if(osd2.eqv..false.) then !!os
 !AA
         do a=Neup+1,Nb
           do i=1,NeUp 
@@ -313,6 +329,9 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
             enddo
           enddo 
         enddo
+
+        endif !!os 
+
 !AB        
         do a=Nedown+1,NB
           do i=1,NeUp 
