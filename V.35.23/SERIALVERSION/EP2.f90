@@ -1,0 +1,425 @@
+SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCONSERVE)
+      ! 
+      !
+
+
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: NB,Ne,MULTIPLICITY
+      DOUBLE PRECISION, INTENT(IN) :: Cup(NB,NB),Cdown(NB,NB),Ints(NB,NB,NB,NB)
+      DOUBLE PRECISION, INTENT(IN) :: EHFeigenup(NB),EHFeigendown(NB)
+      LOGICAL, INTENT(IN) :: SPINCONSERVE
+      INTEGER :: I,J,N,M,O,P,N2,K,L,K1,II,JJ,DIFFER,Q,Nel,NBl
+      INTEGER, ALLOCATABLE :: EXC(:,:),V1(:)
+      DOUBLE PRECISION, ALLOCATABLE :: Calpha(:),Ca(:),Cbeta(:),Cb(:),EP2TEMP(:)
+      DOUBLE PRECISION, ALLOCATABLE :: moIntsAA(:,:,:,:),&
+                                       moIntsAB(:,:,:,:),&
+                                       moIntsBA(:,:,:,:),&
+                                       moIntsBB(:,:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE :: tempInts1(:,:,:,:), & 
+                                       tempInts2(:,:,:,:), &
+                                       tempInts3(:,:,:,:)
+      DOUBLE PRECISION :: TEMP1,DEIJKL
+      LOGICAL :: EXCITE, conver
+
+      DOUBLE PRECISION :: Sz,twoSP1,Nalpha,Nbeta,SEOld1,SEOld2,&
+                          SEOld1AA,SEOld1AB,SEOld2AA,SEOld2AB,&
+                          EMP2,EMP2AA,EMP2AB,EMP2BA,EMP2BB,EPole,EPoleOld,E,PS
+      INTEGER :: a,b,c,d,pole,mu,nu,lam,sig,neup,nedown
+     
+          
+      !AZ 
+      !fix double precision print
+      !2sp1 = 2s+1 
+      twoSP1 = Multiplicity 
+      Sz = ((twoSP1) - 1) / 2
+      if(Sz.eq.0) then 
+        Neup = (Ne / 2)
+        Nedown = (Ne / 2)
+      elseif(Sz.ne.0) then
+        Nbeta  = (Ne-(Sz/0.5)) / 2
+        Nalpha = NBeta + (Sz/0.5)
+        Neup = Nalpha
+        Nedown=Nbeta
+      endif
+          
+      allocate(tempInts1(nb,nb,nb,nb))
+      allocate(tempInts2(nb,nb,nb,nb))
+      allocate(tempInts3(nb,nb,nb,nb))
+
+      allocate(MOIntsAA(nb,nb,nb,nb))
+      allocate(MOIntsAB(nb,nb,nb,nb))
+      allocate(MOIntsBA(nb,nb,nb,nb))
+      allocate(MOIntsBB(nb,nb,nb,nb))
+
+      !Quarter transformations: O(N^5)
+        print*,' '
+        print*,' '
+        print*,'==========================================================='
+        print*,'           Enter Quarter transformations: O(N^5)           '
+        print*,'==========================================================='
+        print*,' '
+        print*,' '
+        print*,' '
+
+!AA
+        print*,'   AA   '        
+      tempInts1=0.0d0 
+      tempInts2=0.0d0
+      tempInts3=0.0d0
+      moIntsAA = 0.0d0
+      do i=1, nb
+        do mu=1, nb
+          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+          (Cup(mu,i)*Ints(mu,:,:,:))
+        enddo 
+        do j=1, nb
+          do nu=1, nb
+            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+            (Cup(nu,j)*tempInts1(i,nu,:,:))
+           enddo
+          do k=1, nb
+            do lam=1, nb
+              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+              (Cup(lam,k)*tempInts2(i,j,lam,:))
+            enddo
+            do l=1, nb
+              do sig=1, nb
+                MOIntsAA(i,j,k,l) = MOIntsAA(i,j,k,l) + &
+                (Cup(sig,l)*tempInts3(i,j,k,sig))
+              enddo      
+            enddo!end i            
+          enddo!end j     
+        enddo!end k         
+      enddo!end l   
+ !AB
+        print*,'   AB   '        
+      tempInts1=0.0d0 
+      tempInts2=0.0d0
+      tempInts3=0.0d0
+      moIntsAB = 0.0d0
+      do i=1, nb
+        do mu=1, nb
+          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+          (Cup(mu,i)*Ints(mu,:,:,:))
+        enddo 
+        do j=1, nb
+          do nu=1, nb
+            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+            (Cdown(nu,j)*tempInts1(i,nu,:,:))
+           enddo
+          do k=1, nb
+            do lam=1, nb
+              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+              (Cup(lam,k)*tempInts2(i,j,lam,:))
+            enddo
+            do l=1, nb
+              do sig=1, nb
+                MOIntsAB(i,j,k,l) = MOIntsAB(i,j,k,l) + &
+                (Cdown(sig,l)*tempInts3(i,j,k,sig))
+              enddo      
+            enddo!end i            
+          enddo!end j     
+        enddo!end k         
+      enddo!end l   
+ !BA
+        print*,'   BA   '        
+      tempInts1=0.0d0 
+      tempInts2=0.0d0
+      tempInts3=0.0d0
+      moIntsBA = 0.0d0
+      do i=1, nb
+        do mu=1, nb
+          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+          (Cdown(mu,i)*Ints(mu,:,:,:))
+        enddo 
+        do j=1, nb
+          do nu=1, nb
+            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+            (Cup(nu,j)*tempInts1(i,nu,:,:))
+           enddo
+          do k=1, nb
+            do lam=1, nb
+              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+              (Cdown(lam,k)*tempInts2(i,j,lam,:))
+            enddo
+            do l=1, nb
+              do sig=1, nb
+                MOIntsBA(i,j,k,l) = MOIntsBA(i,j,k,l) + &
+                (Cup(sig,l)*tempInts3(i,j,k,sig))
+              enddo      
+            enddo!end i            
+          enddo!end j     
+        enddo!end k         
+      enddo!end l   
+  !BB
+        print*,'   BB   '        
+      tempInts1=0.0d0 
+      tempInts2=0.0d0
+      tempInts3=0.0d0
+      moIntsBB = 0.0d0
+      do i=1, nb
+        do mu=1, nb
+          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+          (Cdown(mu,i)*Ints(mu,:,:,:))
+        enddo 
+        do j=1, nb
+          do nu=1, nb
+            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+            (Cdown(nu,j)*tempInts1(i,nu,:,:))
+           enddo
+          do k=1, nb
+            do lam=1, nb
+              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+              (Cdown(lam,k)*tempInts2(i,j,lam,:))
+            enddo
+            do l=1, nb
+              do sig=1, nb
+                MOIntsBB(i,j,k,l) = MOIntsBB(i,j,k,l) + &
+                (Cdown(sig,l)*tempInts3(i,j,k,sig))
+              enddo      
+            enddo!end i            
+          enddo!end j     
+        enddo!end k         
+      enddo!end l   
+ 
+      print*,'   Tran.Done.   '        
+    
+      deallocate(tempInts1,tempInts2,tempInts3)
+
+        print*,' '
+        print*,' '
+        print*,'==========================================================='
+        print*,'                    EP2 Pole Search                        '
+        print*,'==========================================================='
+        print*,' '              
+        print*,' '
+        print*,' '
+
+        SEOld1AA = 0.0d0
+        SEOld1AB = 0.0d0
+        SEOld2AA = 0.0d0
+        SEOld2AB = 0.0d0
+
+
+        SEold1 = 0.0d0
+        SEold2 = 0.0d0
+        PS=0.0d0
+        E = EHFeigenup(7)*0.92
+        conver = .false. 
+
+        EPoleOld=E
+        do while(conver.eqv..false.)
+       !! print*,'conver',conver 
+!SE1  
+!AA
+        do i=1,Neup
+          do a=NeUp+1,NB 
+            do b=NeUp+1,NB
+!antisymm?
+               SEold1AA = SEold1AA +( ((moIntsAA(7,a,i,b)-moIntsAA(7,b,i,a))**2.0d0) / &
+               (EPoleOld + EHFeigenup(i) -EHFeigenup(a)-EHFeigenup(b)) )
+            enddo
+          enddo 
+        enddo
+!AB        
+        do i=1,Nedown
+          do a=NeUp+1,NB 
+            do b=Nedown+1,NB
+               SEold1AB = SEold1AB + (((moIntsAB(7,a,i,b))**2.0d0) / &
+
+
+               (EPoleOld + EHFeigendown(i) -EHFeigenup(a)-EHFeigendown(b)))
+            enddo
+          enddo 
+        enddo
+
+!SE2
+!AA
+        do a=Neup+1,Nb
+          do i=1,NeUp 
+            do j=1,NeUp
+               SEold2AA = SEold2AA + (((moIntsAA(7,i,a,j)-moIntsAA(7,j,a,i))**2.0d0) / &
+               (EPoleOld + EHFeigenup(a) -EHFeigenup(i)-EHFeigenup(j)) )
+            enddo
+          enddo 
+        enddo
+!AB        
+        do a=Nedown+1,NB
+          do i=1,NeUp 
+            do j=1,Nedown
+               SEold2AB = SEold2AB + (((moIntsAB(7,i,a,j))**2.0d0) / &
+
+
+               (EPoleOld + EHFeigendown(a) -EHFeigenup(i)-EHFeigendown(j)))
+            enddo
+          enddo 
+        enddo
+
+!new NR instead
+       SEOld1 = SEOld1AA/2.0d0 +  SEOld1AB
+       SEOld2 = SEOld2AA/2.0d0 + SEOld2AB
+       EPole = EHFeigenup(7) + SEOld1+SEOld2
+!!       print*,'sigma(2)',SEOld1+SEOld2
+
+
+!derivatives
+        SEOld1AA = 0.0d0
+        SEOld1AB = 0.0d0
+        SEOld2AA = 0.0d0
+        SEOld2AB = 0.0d0
+
+       SEOld1=0.0d0
+       SEOld2=0.0d0
+!SE1  
+!AA
+        do i=1,Neup
+          do a=NeUp+1,NB 
+            do b=NeUp+1,NB
+!antisymm?
+               SEold1AA = SEold1AA +( ((moIntsAA(7,a,i,b)-moIntsAA(7,b,i,a))**2.0d0) / &
+               (EPoleOld + EHFeigenup(i) -EHFeigenup(a)-EHFeigenup(b))**2 )
+            enddo
+          enddo 
+        enddo
+!AB        
+        do i=1,Nedown
+          do a=NeUp+1,NB 
+            do b=Nedown+1,NB
+               SEold1AB = SEold1AB + (((moIntsAB(7,a,i,b))**2.0d0) / &
+
+
+               (EPoleOld + EHFeigendown(i) -EHFeigenup(a)-EHFeigendown(b))**2)
+            enddo
+          enddo 
+        enddo
+
+!SE2
+!AA
+        do a=Neup+1,Nb
+          do i=1,NeUp 
+            do j=1,NeUp
+               SEold2AA = SEold2AA + (((moIntsAA(7,i,a,j)-moIntsAA(7,j,a,i))**2.0d0) / &
+               (EPoleOld+ EHFeigenup(a) -EHFeigenup(i)-EHFeigenup(j))**2 )
+            enddo
+          enddo 
+        enddo
+!AB        
+        do a=Nedown+1,NB
+          do i=1,NeUp 
+            do j=1,Nedown
+               SEold2AB = SEold2AB + (((moIntsAB(7,i,a,j))**2.0d0) / &
+
+
+               (EPoleOld + EHFeigendown(a) -EHFeigenup(i)-EHFeigendown(j))**2)
+            enddo
+          enddo 
+        enddo
+
+       SEold1 = -1.0d0*(SEold1AA/2.0d0  +  SEOld1AB)
+       SEold2 = -1.0d0*(SEold2AA/2.0d0  +  SEOld2AB)
+
+       E = (EpoleOld - ((EpoleOld-Epole)/(1-(SEold1+SEold2))))
+       PS = 1/(1-(SEold1+SEold2))
+       print*,'E after NRstep',E      
+
+       if(abs(EPole-EPoleOld).lt.0.0001) then
+       !print*,'EpoleOld',EPoleOld
+       !print*,'Epole',EPole
+       !print*,'abs(EPole-EPoleOld)',abs(EPole-EPoleOld)
+       print*,'converged E (Ha)',E
+       print*,'converged E (eV)',E*27.2114
+       print*,'PS',PS
+       conver=.true.
+       endif 
+
+       EPoleOld=E
+       SEOld1=0.0d0
+       SEOld2=0.0d0
+        SEOld1AA = 0.0d0
+        SEOld1AB = 0.0d0
+        SEOld2AA = 0.0d0
+        SEOld2AB = 0.0d0
+
+
+       enddo!while
+
+!       SEOld1 = SEOld1/2.0d0
+!       SEOld2 = SEOld2/2.0d0
+
+
+
+!
+       emp2=0.0d0
+       emp2aa=0.0d0
+       emp2ab=0.0d0
+       emp2ba=0.0d0
+       emp2bb=0.0d0 
+        do i=1,neup
+          do j=1,neup
+            do a=neup+1,nB
+              do b=neup+1,nB
+              EMP2AA = EMP2AA +  &
+                (moIntsAA(i,a,j,b)-moIntsAA(i,b,j,a))**2 / &  
+                ((ehfeigenup(i) + ehfeigenup(j)) - &
+                ehfeigenup(a) - ehfeigenup(b))
+!OS K int is 0 no double counting  
+              EMP2AB = EMP2AB +  &
+                (moIntsAB(i,a,j,b))**2 / &  
+                ((ehfeigenup(i) + ehfeigendown(j)) - &
+                ehfeigenup(a) - ehfeigendown(b))
+
+              EMP2BA = EMP2BA +  &
+                (moIntsBA(i,a,j,b))**2 / &  
+                ((ehfeigendown(i) + ehfeigenup(j)) - &
+                ehfeigendown(a) - ehfeigenup(b))
+
+              EMP2BB = EMP2BB +  &
+                (moIntsBB(i,a,j,b)-moIntsBB(i,b,j,a))**2 / &  
+                ((ehfeigendown(i) + ehfeigendown(j)) - &
+                ehfeigendown(a) - ehfeigendown(b))
+
+              enddo 
+            enddo 
+          enddo 
+        enddo 
+
+        print*,' '
+        EMP2AA =  EMP2AA/4.0d0
+        EMP2AB =  EMP2AB
+        EMP2BA =  EMP2BA
+        EMP2BB =  EMP2BB/4.0d0
+        print*,'EMP2AA',EMP2AA
+        print*,'EMP2AB',EMP2AB
+        print*,'EMP2BB',EMP2BB
+
+        EMP2=EMP2AA+EMP2AB+EMP2BB
+        print*,'EMP2',EMP2
+        print*,' '
+        print*,'EPole(corr) (Ha)',EPOLE
+        print*,'EPole(corr) (eV)',EPOLE*27.2114
+
+!        print*,'SE',EPole
+        print*,'e(pole) (Ha)',EHFeigenup(7)
+        print*,'e(pole) (eV)',EHFeigenup(7)*27.2114
+      deallocate(MOIntsAA,MOIntsAB,MOIntsBA,MOIntsBB)
+
+ 
+        print*,' '
+        print*,' '
+        print*,'==========================================================='
+        print*,'            Results from the EP2 calculation:              '
+        print*,'==========================================================='
+        print*,' '              
+        print*,' '
+        print*,' '
+
+print*,'fix slope, and SS OS terms'
+        !-----------------------------
+        ! HERE THE OUTPUT IS GENERATED
+        !-----------------------------
+!        WRITE(*,'(A27,F30.20,A3)')'      Correlation Energy =',EP2,' au'
+!        WRITE(*,'(A27,F30.20,A3)')'     Hartree-Fock Energy =',E0,' au'
+!        print*,' '
+!        print*,' '
+       
+        END SUBROUTINE EP2
