@@ -436,8 +436,9 @@ PROGRAM uquantchem
                 IF ( WHOMOLUMO ) call homolumosave(LIMITS,MESH,BAS,EIGENVECT,EIGENVECT,EHFeigen,EHFeigen,Ne,NATOMS,ATOMS,DFTC)
         ENDIF
 
-        IF ( CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
-                
+!AZ        IF ( CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
+         IF (CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
+                 
                 ALLOCATE(EHFeigenup(NB),EHFeigendown(NB),Cup(NB,NB),Cdown(NB,NB),P(NB,NB),Pup(NB,NB),Pdown(NB,NB),C1(NB,NB),C2(NB,NB))
                 
                 IF ( .not. RESTRICT .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
@@ -446,7 +447,6 @@ PROGRAM uquantchem
                         IF ( .not. DFTC ) CALL URHF(MULTIPLICITY,BSURHF,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE., .TRUE.,.FALSE. )
                         !AZ
                         print*,'ETOT after URHF for CISD',ETOT                        
-                       
                         IF ( DFTC ) CALL DFT(CORRLEVEL,NATOMS,ATOMS,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
                         & ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE.,.TRUE.,.FALSE.,ETEMP,mu,ENTROPY)
 
@@ -507,6 +507,8 @@ PROGRAM uquantchem
                 
                 ! If specified, the charge density is calculated and saved here:
                 IF ( WRITEDENS .AND. ( CORRLEVEL .EQ. 'RHF'  .OR. CORRLEVEL .EQ. 'URHF' .OR. DFTC ) ) THEN 
+
+
                         C1 = 0.0d0
                         C2 = 0.0d0
                         DO I=1,( Ne - MOD(Ne,2) )/2
@@ -533,7 +535,10 @@ PROGRAM uquantchem
                 IF ( WHOMOLUMO ) call homolumosave(LIMITS,MESH,BAS,Cup,Cdown,EHFeigenup,EHFeigendown,Ne,NATOMS,ATOMS,DFTC)
                 
                 
-                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' ) THEN
+!AZ8/25                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' ) THEN
+                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2' ) THEN
+
+
                         !print*,'========================================================'
                         !print*,'  Tranfering (ij|kl) from vector to tensor form         '
                         !print*,'========================================================'
@@ -553,9 +558,12 @@ PROGRAM uquantchem
 
 
                 DEALLOCATE(Intsv)
-                
+!AZ8/25             
+                IF ( CORRLEVEL .EQ. 'EP2'  ) CALL EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+                                             ETOT-nucE,nuce,SPINCONSERVE)
+!AZ8/25                                
                 IF ( CORRLEVEL .EQ. 'MP2'  ) CALL MP2(Cup,Cdown,Ints,NB,Ne,ETOT-nucE,nuce,EMP2,EHFeigenup,EHFeigendown,SPINCONSERVE)
-                 
+
                 ! Here the CISD calculation starts
                 IF ( CORRLEVEL .EQ. 'CISD' ) THEN       
                         print*,' '

@@ -1,4 +1,4 @@
-SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCONSERVE)
+SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce,SPINCONSERVE)
       ! 
       !
 
@@ -6,7 +6,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: NB,Ne,MULTIPLICITY
       DOUBLE PRECISION, INTENT(IN) :: Cup(NB,NB),Cdown(NB,NB),Ints(NB,NB,NB,NB)
-      DOUBLE PRECISION, INTENT(IN) :: EHFeigenup(NB),EHFeigendown(NB)
+      DOUBLE PRECISION, INTENT(IN) :: EHFeigenup(NB),EHFeigendown(NB), E0,nuce
       LOGICAL, INTENT(IN) :: SPINCONSERVE
       INTEGER :: I,J,N,M,O,P,N2,K,L,K1,II,JJ,DIFFER,Q,Nel,NBl
       INTEGER, ALLOCATABLE :: EXC(:,:),V1(:)
@@ -24,7 +24,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
       DOUBLE PRECISION :: Sz,twoSP1,Nalpha,Nbeta,SEOld1,SEOld2,&
                           SEOld1AA,SEOld1AB,SEOld2AA,SEOld2AB,&
                           EMP2,EMP2AA,EMP2AB,EMP2BA,EMP2BB,EPole,EPoleOld,E,PS
-      INTEGER :: a,b,c,d,pole,mu,nu,lam,sig,neup,nedown
+      INTEGER :: a,b,c,d,pole,mu,nu,lam,sig,neup,nedown,iter
      
           
       !AZ 
@@ -186,15 +186,25 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
     
       deallocate(tempInts1,tempInts2,tempInts3)
 
+
         print*,' '
         print*,' '
         print*,'==========================================================='
-        print*,'                    EP2 Pole Search                        '
+        print*,'            Results from the EP2 calculation:              '
         print*,'==========================================================='
         print*,' '              
         print*,' '
-        print*,' '
 
+
+        do pole=1,10 !!!!! begin pole search
+
+        iter=0 !max iter 15 for now
+
+        print*,' '
+        print*,'orb',pole
+        print*,' '
+        
+        E=0.0d0
         SEOld1AA = 0.0d0
         SEOld1AB = 0.0d0
         SEOld2AA = 0.0d0
@@ -204,7 +214,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
         SEold1 = 0.0d0
         SEold2 = 0.0d0
         PS=0.0d0
-        E = EHFeigenup(7)*0.92
+        E = EHFeigenup(pole)*0.92
         conver = .false. 
 
         EPoleOld=E
@@ -216,7 +226,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
           do a=NeUp+1,NB 
             do b=NeUp+1,NB
 !antisymm?
-               SEold1AA = SEold1AA +( ((moIntsAA(7,a,i,b)-moIntsAA(7,b,i,a))**2.0d0) / &
+               SEold1AA = SEold1AA +( ((moIntsAA(pole,a,i,b)-moIntsAA(pole,b,i,a))**2.0d0) / &
                (EPoleOld + EHFeigenup(i) -EHFeigenup(a)-EHFeigenup(b)) )
             enddo
           enddo 
@@ -225,7 +235,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
         do i=1,Nedown
           do a=NeUp+1,NB 
             do b=Nedown+1,NB
-               SEold1AB = SEold1AB + (((moIntsAB(7,a,i,b))**2.0d0) / &
+               SEold1AB = SEold1AB + (((moIntsAB(pole,a,i,b))**2.0d0) / &
 
 
                (EPoleOld + EHFeigendown(i) -EHFeigenup(a)-EHFeigendown(b)))
@@ -238,7 +248,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
         do a=Neup+1,Nb
           do i=1,NeUp 
             do j=1,NeUp
-               SEold2AA = SEold2AA + (((moIntsAA(7,i,a,j)-moIntsAA(7,j,a,i))**2.0d0) / &
+               SEold2AA = SEold2AA + (((moIntsAA(pole,i,a,j)-moIntsAA(pole,j,a,i))**2.0d0) / &
                (EPoleOld + EHFeigenup(a) -EHFeigenup(i)-EHFeigenup(j)) )
             enddo
           enddo 
@@ -247,7 +257,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
         do a=Nedown+1,NB
           do i=1,NeUp 
             do j=1,Nedown
-               SEold2AB = SEold2AB + (((moIntsAB(7,i,a,j))**2.0d0) / &
+               SEold2AB = SEold2AB + (((moIntsAB(pole,i,a,j))**2.0d0) / &
 
 
                (EPoleOld + EHFeigendown(a) -EHFeigenup(i)-EHFeigendown(j)))
@@ -258,7 +268,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
 !new NR instead
        SEOld1 = SEOld1AA/2.0d0 +  SEOld1AB
        SEOld2 = SEOld2AA/2.0d0 + SEOld2AB
-       EPole = EHFeigenup(7) + SEOld1+SEOld2
+       EPole = EHFeigenup(pole) + SEOld1+SEOld2
 !!       print*,'sigma(2)',SEOld1+SEOld2
 
 
@@ -276,7 +286,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
           do a=NeUp+1,NB 
             do b=NeUp+1,NB
 !antisymm?
-               SEold1AA = SEold1AA +( ((moIntsAA(7,a,i,b)-moIntsAA(7,b,i,a))**2.0d0) / &
+               SEold1AA = SEold1AA +( ((moIntsAA(pole,a,i,b)-moIntsAA(pole,b,i,a))**2.0d0) / &
                (EPoleOld + EHFeigenup(i) -EHFeigenup(a)-EHFeigenup(b))**2 )
             enddo
           enddo 
@@ -285,7 +295,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
         do i=1,Nedown
           do a=NeUp+1,NB 
             do b=Nedown+1,NB
-               SEold1AB = SEold1AB + (((moIntsAB(7,a,i,b))**2.0d0) / &
+               SEold1AB = SEold1AB + (((moIntsAB(pole,a,i,b))**2.0d0) / &
 
 
                (EPoleOld + EHFeigendown(i) -EHFeigenup(a)-EHFeigendown(b))**2)
@@ -298,7 +308,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
         do a=Neup+1,Nb
           do i=1,NeUp 
             do j=1,NeUp
-               SEold2AA = SEold2AA + (((moIntsAA(7,i,a,j)-moIntsAA(7,j,a,i))**2.0d0) / &
+               SEold2AA = SEold2AA + (((moIntsAA(pole,i,a,j)-moIntsAA(pole,j,a,i))**2.0d0) / &
                (EPoleOld+ EHFeigenup(a) -EHFeigenup(i)-EHFeigenup(j))**2 )
             enddo
           enddo 
@@ -307,7 +317,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
         do a=Nedown+1,NB
           do i=1,NeUp 
             do j=1,Nedown
-               SEold2AB = SEold2AB + (((moIntsAB(7,i,a,j))**2.0d0) / &
+               SEold2AB = SEold2AB + (((moIntsAB(pole,i,a,j))**2.0d0) / &
 
 
                (EPoleOld + EHFeigendown(a) -EHFeigenup(i)-EHFeigendown(j))**2)
@@ -320,16 +330,19 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
 
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(SEold1+SEold2))))
        PS = 1/(1-(SEold1+SEold2))
-       print*,'E after NRstep',E      
+       !print*,'E after NRstep',E      
 
-       if(abs(EPole-EPoleOld).lt.0.0001) then
-       !print*,'EpoleOld',EPoleOld
-       !print*,'Epole',EPole
-       !print*,'abs(EPole-EPoleOld)',abs(EPole-EPoleOld)
-       print*,'converged E (Ha)',E
-       print*,'converged E (eV)',E*27.2114
+       iter=iter+1
+
+       if(abs(EPole-EPoleOld).lt.0.0001.or.iter.eq.15) then
+       print*,'Koopmans',EHFeigenup(pole)
+       print*,'D2 (Ha)',E
+       print*,'D2 (eV)',E*27.2114
        print*,'PS',PS
        conver=.true.
+       if(iter.eq.15) then 
+         print*,'pole not converged after',iter,'iter'
+       endif 
        endif 
 
        EPoleOld=E
@@ -343,10 +356,14 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
 
        enddo!while
 
-!       SEOld1 = SEOld1/2.0d0
-!       SEOld2 = SEOld2/2.0d0
+       enddo !!!!! end pole search
 
-
+       print*,' '
+       print*,' '
+       print*,'==========================================================='
+       print*,'            Results from the MP2 calculation:              '
+       print*,'==========================================================='
+       print*,' '
 
 !
        emp2=0.0d0
@@ -388,32 +405,26 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,SPINCON
         EMP2AB =  EMP2AB
         EMP2BA =  EMP2BA
         EMP2BB =  EMP2BB/4.0d0
-        print*,'EMP2AA',EMP2AA
-        print*,'EMP2AB',EMP2AB
-        print*,'EMP2BB',EMP2BB
-
+        print*,'E2AA (Ha)',EMP2AA
+        print*,'E2AB (Ha)',EMP2AB
+        print*,'E2BB (Ha)',EMP2BB
+        
         EMP2=EMP2AA+EMP2AB+EMP2BB
-        print*,'EMP2',EMP2
+
+        print*,'E2 (Ha)',EMP2
+
         print*,' '
-        print*,'EPole(corr) (Ha)',EPOLE
-        print*,'EPole(corr) (eV)',EPOLE*27.2114
-
-!        print*,'SE',EPole
-        print*,'e(pole) (Ha)',EHFeigenup(7)
-        print*,'e(pole) (eV)',EHFeigenup(7)*27.2114
-      deallocate(MOIntsAA,MOIntsAB,MOIntsBA,MOIntsBB)
-
  
-        print*,' '
-        print*,' '
-        print*,'==========================================================='
-        print*,'            Results from the EP2 calculation:              '
-        print*,'==========================================================='
-        print*,' '              
+        WRITE(*,'(A27,F30.20,A3)')'      Correlation Energy =',EMP2,' au'
+        WRITE(*,'(A27,F30.20,A3)')'     Hartree-Fock Energy =',E0,' au'
+        IF ( nuce .NE. 0) WRITE(*,'(A27,F30.20,A3)')' Nuclear repulsion Energy =',nuce,' au'
+        IF ( nuce .NE. 0) WRITE(*,'(A27,F30.20,A3)')'            Total Energy =',E0+EMP2+nuce,' au'
+        IF ( nuce .EQ. 0) WRITE(*,'(A27,F30.20,A3)')'            Total Energy =',E0+EMP2,' au'
         print*,' '
         print*,' '
 
-print*,'fix slope, and SS OS terms'
+        deallocate(MOIntsAA,MOIntsAB,MOIntsBA,MOIntsBB)
+ 
         !-----------------------------
         ! HERE THE OUTPUT IS GENERATED
         !-----------------------------
