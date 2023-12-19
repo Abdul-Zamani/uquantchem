@@ -437,7 +437,7 @@ PROGRAM uquantchem
         ENDIF
 
 !AZ        IF ( CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
-         IF (CORRLEVEL .EQ. 'EP2'  .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
+         IF (CORRLEVEL .EQ. 'EP2'  .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
                  
                 ALLOCATE(EHFeigenup(NB),EHFeigendown(NB),Cup(NB,NB),Cdown(NB,NB),P(NB,NB),Pup(NB,NB),Pdown(NB,NB),C1(NB,NB),C2(NB,NB))
                 
@@ -536,7 +536,7 @@ PROGRAM uquantchem
                 
                 
 !AZ8/25                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' ) THEN
-                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2'.OR. CORRLEVEL .EQ. 'EP2nD' ) THEN
+                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2'.OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2') THEN
 
 
                         !print*,'========================================================'
@@ -561,7 +561,9 @@ PROGRAM uquantchem
 !AZ12/17             
                 IF ( CORRLEVEL .EQ. 'EP2'  ) CALL EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
-                IF ( CORRLEVEL .EQ. 'EP2nD'  ) CALL EP2nD(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+                IF ( CORRLEVEL .EQ. 'EP2nD'  ) CALL EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+                                             ETOT-nucE,nuce,SPINCONSERVE)
+                IF ( CORRLEVEL .EQ. 'UEP2'  ) CALL UEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
 !AZ12/17                                
                 IF ( CORRLEVEL .EQ. 'MP2'  ) CALL MP2(Cup,Cdown,Ints,NB,Ne,ETOT-nucE,nuce,EMP2,EHFeigenup,EHFeigendown,SPINCONSERVE)
