@@ -198,7 +198,7 @@ SUBROUTINE UEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuc
 
         
 
-        osd2 = .false. !flag for OS
+        osd2 = .true. !.false. !flag for OS
 
         print*,'OSD2 is',osd2 
 
@@ -356,9 +356,14 @@ SUBROUTINE UEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuc
 
        if(abs(EPole-EPoleOld).lt.0.0001.or.iter.eq.15) then
        print*,'Koopmans =',EHFeigenup(pole)
-       print*,'D2 (Ha) =',E
-       print*,'D2 (eV) =',E*27.2114
-       print*,'PS =',PS
+       if(osd2.eqv..false.) then
+         print*,'D2 (Ha) =',E
+         print*,'D2 (eV) =',E*27.2114
+       elseif(osd2.eqv..true.) then
+         print*,'os-D2 (Ha) =',E
+         print*,'os-D2 (eV) =',E*27.2114
+       endif 
+         print*,'PS =',PS
        conver=.true.
        if(iter.eq.15) then 
          print*,'pole not converged after',iter,'iter'
@@ -534,9 +539,15 @@ SUBROUTINE UEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuc
 
        if(abs(EPole-EPoleOld).lt.0.0001.or.iter.eq.15) then
        print*,'Koopmans =',EHFeigendown(pole)
-       print*,'D2 (Ha) =',E
-       print*,'D2 (eV) =',E*27.2114
-       print*,'PS =',PS
+       if(osd2.eqv..false.) then
+         print*,'D2 (Ha) =',E
+         print*,'D2 (eV) =',E*27.2114
+       elseif(osd2.eqv..true.) then
+         print*,'os-D2 (Ha) =',E
+         print*,'os-D2 (eV) =',E*27.2114
+       endif
+         print*,'PS =',PS
+
        conver=.true.
        if(iter.eq.15) then 
          print*,'pole not converged after',iter,'iter'
