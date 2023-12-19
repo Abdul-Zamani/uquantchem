@@ -27,7 +27,7 @@ SOURCE = datatypemodule.o exchcorrmodule.o random.o Afunc.o RHF.o Fnurec.o Fnu.o
 	 interpol.o gradbasfunkval.o laplacebasfunkval.o hforbitalval.o gradhforbitalval.o laplacehforbitalval.o det.o \
 	 stoexponent.o slaterdet.o laplaceslaterdet.o gradslaterdet.o jastrowup.o jastrowdown.o jastrowud.o jastrow.o \
 	 DIIS.o findclosestatom.o gradjastrow.o laplacejastrow.o guideforce.o laplacetrialfnk.o trialfnk.o EL.o dqmc.o \
-	 preparedifusion.o ROOTWEIGHTMAX3.o readbasis.o primpotential.o primoverlap.o primkinetic.o EP2.o EP2nD.o UEP2.o MP2.o uquantchem.o \
+	 preparedifusion.o ROOTWEIGHTMAX3.o readbasis.o primpotential.o primoverlap.o primkinetic.o EP2.o EP2nD.o UEP2.o UEP2nD.o MP2.o uquantchem.o \
 	 gradprimoverlap.o gradprimkinetic.o gradprimpotential.o gradprimeeintegral.o forces.o dAfunc.o relax.o linesearchmin.o \
 	 massa.o moleculardynamics.o moleculardynamicssoft.o invert.o vxc.o vxcalt.o dvxc.o ngbasfunkval.o nggradbasfunkval.o nglaplacebasfunkval.o \
 	 getvxcr.o atomicradii.o lebedev1.o lebedev2.o lebedev3.o lebedev4.o lebedev5.o chebgauss.o sofmu.o pvoronoi.o getvxc.o excdens.o excdr.o exc.o DFT.o quadcheck.o TRACE.o \
