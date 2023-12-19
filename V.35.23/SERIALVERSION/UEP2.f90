@@ -106,12 +106,12 @@ SUBROUTINE UEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuc
         do j=1, nb
           do nu=1, nb
             tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
-            (Cdown(nu,j)*tempInts1(i,nu,:,:))
+            (Cup(nu,j)*tempInts1(i,nu,:,:)) !AZ cdown
            enddo
           do k=1, nb
             do lam=1, nb
               tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
-              (Cup(lam,k)*tempInts2(i,j,lam,:))
+              (Cdown(lam,k)*tempInts2(i,j,lam,:)) !AZ cup 
             enddo
             do l=1, nb
               do sig=1, nb
@@ -136,17 +136,17 @@ SUBROUTINE UEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuc
         do j=1, nb
           do nu=1, nb
             tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
-            (Cup(nu,j)*tempInts1(i,nu,:,:))
+            (Cdown(nu,j)*tempInts1(i,nu,:,:)) !AZ Cup
            enddo
           do k=1, nb
             do lam=1, nb
               tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
-              (Cdown(lam,k)*tempInts2(i,j,lam,:))
+              (Cup(lam,k)*tempInts2(i,j,lam,:)) !AZ Cup 
             enddo
             do l=1, nb
               do sig=1, nb
                 MOIntsBA(i,j,k,l) = MOIntsBA(i,j,k,l) + &
-                (Cup(sig,l)*tempInts3(i,j,k,sig))
+                (Cup(sig,l)*tempInts3(i,j,k,sig)) 
               enddo      
             enddo!end i            
           enddo!end j     
@@ -574,6 +574,7 @@ SUBROUTINE UEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuc
        emp2ab=0.0d0
        emp2ba=0.0d0
        emp2bb=0.0d0 
+!AA
         do i=1,neup
           do j=1,neup
             do a=neup+1,nB
@@ -582,26 +583,55 @@ SUBROUTINE UEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuc
                 (moIntsAA(i,a,j,b)-moIntsAA(i,b,j,a))**2 / &  
                 ((ehfeigenup(i) + ehfeigenup(j)) - &
                 ehfeigenup(a) - ehfeigenup(b))
+              enddo 
+            enddo 
+          enddo 
+        enddo 
+
+!AB
+        do i=1,neup
+          do j=1,nedown
+            do a=neup+1,nB
+              do b=nedown+1,nB
 !OS K int is 0 no double counting  
               EMP2AB = EMP2AB +  &
                 (moIntsAB(i,a,j,b))**2 / &  
                 ((ehfeigenup(i) + ehfeigendown(j)) - &
                 ehfeigenup(a) - ehfeigendown(b))
+              enddo 
+            enddo 
+          enddo 
+        enddo
 
+
+!BA
+        do i=1,nedown
+          do j=1,neup
+            do a=nedown+1,nB
+              do b=neup+1,nB
+!OS K int is 0 no double counting  
               EMP2BA = EMP2BA +  &
                 (moIntsBA(i,a,j,b))**2 / &  
                 ((ehfeigendown(i) + ehfeigenup(j)) - &
                 ehfeigendown(a) - ehfeigenup(b))
-
-              EMP2BB = EMP2BB +  &
-                (moIntsBB(i,a,j,b)-moIntsBB(i,b,j,a))**2 / &  
-                ((ehfeigendown(i) + ehfeigendown(j)) - &
-                ehfeigendown(a) - ehfeigendown(b))
-
               enddo 
             enddo 
           enddo 
         enddo 
+!BB
+        do i=1,nedown
+          do j=1,nedown
+            do a=nedown+1,nB
+              do b=nedown+1,nB
+              EMP2BB = EMP2BB +  &
+                (moIntsBB(i,a,j,b)-moIntsBB(i,b,j,a))**2 / &  
+                ((ehfeigendown(i) + ehfeigendown(j)) - &
+                ehfeigendown(a) - ehfeigendown(b))
+              enddo 
+            enddo 
+          enddo 
+        enddo 
+
 
         print*,' '
         EMP2AA =  EMP2AA/4.0d0
@@ -610,6 +640,7 @@ SUBROUTINE UEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuc
         EMP2BB =  EMP2BB/4.0d0
         print*,'E2AA (Ha) =',EMP2AA
         print*,'E2AB (Ha) =',EMP2AB
+        print*,'E2BA (Ha) =',EMP2BA
         print*,'E2BB (Ha) =',EMP2BB
         
         EMP2=EMP2AA+EMP2AB+EMP2BB
