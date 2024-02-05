@@ -156,13 +156,14 @@ SUBROUTINE EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
      enddo 
   
      deallocate(tempInts1,tempInts2,tempInts3)
+
         !AZ if tiled by spin, 2*poleIndex
-        do pole=1,neup*2 !!!!! begin pole search
+        do pole=1,(neup*2)+1,2 !!!!! begin pole search
 
         iter=0 !max iter 15 for now
 
         print*,' '
-        print*,'orb',pole
+        print*,'orb',int(pole/2)+1 !pole
         print*,' '
         
         E=0.0d0
