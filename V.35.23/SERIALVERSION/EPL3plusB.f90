@@ -1,4 +1,4 @@
-SUBROUTINE EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce,SPINCONSERVE)
+SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce,SPINCONSERVE)
       ! 
       !
 
@@ -30,7 +30,9 @@ SUBROUTINE EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
       DOUBLE PRECISION :: D2, D3,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,&
                           B1,B2,B3,B4,B5,B6,Aterms,Bterms,&
                           secondOrder,thirdOrder,&
-                          secondOrderDeriv,thirdOrderDeriv,deriv
+                          secondOrderDeriv,thirdOrderDeriv,deriv,&
+                          S2ph, S2hp, dS2ph,dS2hp,R2ph,R2hp,&
+                          dR2ph,dR2hp,P2ph,P2hp,dP2ph,dP2hp
       INTEGER :: a,b,c,d,r,s,pole,mu,nu,lam,sig,neup,nedown,iter
      
           
@@ -214,6 +216,8 @@ SUBROUTINE EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
 !new NR instead
        SEOld1 = SEOld1AA/2.0d0 
        SEOld2 = SEOld2AA/2.0d0
+       S2ph = SEOld1
+       S2hp = SEOld2
        EPole = eps(pole) + SEOld1+SEOld2
 !!       print*,'sigma(2)',SEOld1+SEOld2
        !!print*,'SEOld1',SEOld1
@@ -252,6 +256,9 @@ SUBROUTINE EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
 
        SEold1 = -1.0d0*(SEold1AA/2.0d0)
        SEold2 = -1.0d0*(SEold2AA/2.0d0)
+
+       dS2ph = SEold1  
+       dS2hp = SEold2     
 
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(SEold1+SEold2))))
        PS = 1/(1-(SEold1+SEold2))
@@ -737,17 +744,22 @@ SUBROUTINE EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
         !factor 
         A12=(-0.25d0)*A12
 
-       !L3 terms
-       !R2hp: A1, A2
-       !R2ph: A11, A12 
+       !L3+B terms
+       !R2ph: A1, A2
+       !R2hp: A11, A12 
        !P2ph: A3-A6
        !P2hp: A7-A10 
        !Cs: B1, B2, B5, B6
        !Cd: B3, B4
 
+       P2ph = A3+A4+A5+A6
+       P2hp = A7+A8+A9+A10
+       R2ph = A1+A2
+       R2hp = A11+A12 
+
        !Total of A terms 
-       Aterms=A1+A2+A11+A12
-       Aterms=Aterms + (0.5*(A3+A4+A5+A6+A7+A8+A9+A10))  
+       Aterms=(S2hp/(S2hp-(0.5*P2hp)))*(R2hp+(0.5*P2hp)) 
+       Aterms=Aterms + (S2ph/(S2ph-(0.5*P2ph)))*(R2ph+(0.5*P2ph))
       
        !Total of 3rd order terms
        thirdOrder=Aterms+Bterms
@@ -1080,8 +1092,35 @@ SUBROUTINE EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
 !add 2nd order derivs as well, put into Newton and PS formula 
 
        !save 3rd order derivs
-       thirdOrderDeriv=0.5*(A3+A4+A5+A6+A7+A8+A9+A10)
-       thirdOrderDeriv=thirdOrderDeriv+A1+A2+A11+A12
+ 
+       
+       dP2ph = A3+A4+A5+A6
+       dP2hp = A7+A8+A9+A10
+       dR2ph = A1+A2
+       dR2hp = A11+A12 
+
+       !A term derivs
+       !reuse A terms for derivs  
+       Aterms=(R2hp*(0.5*((S2hp*dP2hp)-(P2hp*dS2hp))))+&
+              ((S2hp*dR2hp)*(S2hp-(0.5*P2hp))) / & 
+              ((S2hp-(0.5*P2hp))**2)
+       Aterms=Aterms+&
+              (R2ph*(0.5*((S2ph*dP2ph)-(P2ph*dS2ph))))+&
+              ((S2ph*dR2ph)*(S2ph-(0.5*P2ph))) / & 
+              ((S2ph-(0.5*P2ph))**2)
+       Aterms=Aterms+&
+              (P2ph*(0.5*((S2ph*dP2ph)-(P2ph*dS2ph))))+&
+              ((S2ph*dP2ph)*(S2ph-(0.5*P2ph))) / & 
+              ((S2ph-(0.5*P2ph))**2)
+       Aterms=Aterms+&
+              (P2hp*(0.5*((S2hp*dP2hp)-(P2hp*dS2hp))))+&
+              ((S2hp*dP2hp)*(S2hp-(0.5*P2hp))) / & 
+              ((S2hp-(0.5*P2hp))**2)
+
+
+       !thirdOrderDeriv=0.5*(A3+A4+A5+A6+A7+A8+A9+A10)
+       !thirdOrderDeriv=thirdOrderDeriv+A1+A2+A11+A12
+       thirdOrderDeriv = Aterms 
        !Compute new pole NR step 
        deriv = secondOrderDeriv+thirdOrderDeriv
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(deriv))))
@@ -1093,8 +1132,8 @@ SUBROUTINE EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
        if(abs(EPole-EPoleOld).lt.0.00001.or.iter.eq.15) then
        D3 = E
        print*,'Koopmans =',eps(pole)
-       print*,'L3 (Ha) =',D3
-       print*,'L3 (eV) =',D3*27.2114
+       print*,'L3+B (Ha) =',D3
+       print*,'L3+B (eV) =',D3*27.2114
        print*,'PS =',PS
        conver=.true.
        if(iter.eq.15) then 
@@ -1137,5 +1176,5 @@ contains
       end function kronecker
 
  
-        END SUBROUTINE EPL3so
+        END SUBROUTINE EPL3plusB
     
