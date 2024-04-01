@@ -1,4 +1,4 @@
-SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce,SPINCONSERVE)
+SUBROUTINE EPQ3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce,SPINCONSERVE)
       ! 
       !
 
@@ -25,17 +25,12 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
 
       DOUBLE PRECISION :: Sz,twoSP1,Nalpha,Nbeta,SEOld1,SEOld2,&
                           SEOld1AA,SEOld1AB,SEOld2AA,SEOld2AB,&
-                          dSEOld1,dSEOld2,&
-                          dSEOld1AA,dSEOld1AB,dSEOld2AA,dSEOld2AB,&
                           EMP2,EMP2AA,EMP2AB,EMP2BA,EMP2BB,EPole,EPoleOld,E,PS,&
                           X1,X2
       DOUBLE PRECISION :: D2, D3,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,&
                           B1,B2,B3,B4,B5,B6,Aterms,Bterms,&
                           secondOrder,thirdOrder,&
-                          secondOrderDeriv,thirdOrderDeriv,deriv,&
-                          S2ph, S2hp, dS2ph,dS2hp,R2ph,R2hp,&
-                          dR2ph,dR2hp,P2ph,P2hp,dP2ph,dP2hp
-
+                          secondOrderDeriv,thirdOrderDeriv,deriv
       INTEGER :: a,b,c,d,r,s,pole,mu,nu,lam,sig,neup,nedown,iter
      
           
@@ -225,20 +220,20 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        !!print*,'SEOld2',SEOld2
 
 !derivatives
-        dSEOld1AA = 0.0d0
-        dSEOld1AB = 0.0d0
-        dSEOld2AA = 0.0d0
-        dSEOld2AB = 0.0d0
+        SEOld1AA = 0.0d0
+        SEOld1AB = 0.0d0
+        SEOld2AA = 0.0d0
+        SEOld2AB = 0.0d0
 
-       dSEOld1=0.0d0
-       dSEOld2=0.0d0
+       SEOld1=0.0d0
+       SEOld2=0.0d0
 !SE1  
 !AA
         do i=1,Neup*2
           do a=(NeUp*2)+1,NB*2
             do b=(NeUp*2)+1,NB*2
 !antisymm?
-               dSEold1AA = dSEold1AA +( ((tei(pole,i,a,b))**2.0d0) / &
+               SEold1AA = SEold1AA +( ((tei(pole,i,a,b))**2.0d0) / &
                (EPoleOld + eps(i) -eps(a)-eps(b))**2 )
             enddo
           enddo 
@@ -249,30 +244,23 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
         do a=(Neup*2)+1,Nb*2
           do i=1,NeUp*2
             do j=1,NeUp*2
-               dSEold2AA = dSEold2AA + ( ((tei(pole,a,i,j))**2.0d0) / &
+               SEold2AA = SEold2AA + ( ((tei(pole,a,i,j))**2.0d0) / &
                (EPoleOld+ eps(a) -eps(i)-eps(j))**2 )
             enddo
           enddo 
         enddo
 
-       dSEold1 = -1.0d0*(dSEold1AA/2.0d0)
-       dSEold2 = -1.0d0*(dSEold2AA/2.0d0)
+       SEold1 = -1.0d0*(SEold1AA/2.0d0)
+       SEold2 = -1.0d0*(SEold2AA/2.0d0)
 
-       E = (EpoleOld - ((EpoleOld-Epole)/(1-(dSEold1+dSEold2))))
-       PS = 1/(1-(dSEold1+dSEold2))
+       E = (EpoleOld - ((EpoleOld-Epole)/(1-(SEold1+SEold2))))
+       PS = 1/(1-(SEold1+SEold2))
        !print*,'E after NRstep',E      
 
        iter=iter+1
 
        if(abs(EPole-EPoleOld).lt.0.0001.or.iter.eq.15) then
        D2 = E
-       S2ph=SEold1
-       S2hp=SEold2
-       dS2ph=dSEold1
-       dS2hp=dSEold2
-       !print*,'S2ph and S2hp in d2',S2ph,S2hp
-       !print*,'dS2ph and dS2hp in d2',dS2ph,dS2hp
-       !print*,'in D2: S2hp',S2hp
        print*,'Koopmans =',eps(pole)
        print*,'D2 (Ha) =',E
        print*,'D2 (eV) =',E*27.2114
@@ -353,20 +341,20 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
 !!       print*,'SEOld2',SEOld2
 
 !derivatives
-        dSEOld1AA = 0.0d0
-        dSEOld1AB = 0.0d0
-        dSEOld2AA = 0.0d0
-        dSEOld2AB = 0.0d0
+        SEOld1AA = 0.0d0
+        SEOld1AB = 0.0d0
+        SEOld2AA = 0.0d0
+        SEOld2AB = 0.0d0
 
-       dSEOld1=0.0d0
-       dSEOld2=0.0d0
+       SEOld1=0.0d0
+       SEOld2=0.0d0
 !SE1  
 !AA
         do i=1,Neup*2
           do a=(NeUp*2)+1,NB*2
             do b=(NeUp*2)+1,NB*2
 !antisymm?
-               dSEold1AA = dSEold1AA +( ((tei(pole,i,a,b))**2.0d0) / &
+               SEold1AA = SEold1AA +( ((tei(pole,i,a,b))**2.0d0) / &
                (EPoleOld + eps(i) -eps(a)-eps(b))**2 )
             enddo
           enddo 
@@ -377,17 +365,17 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
         do a=(Neup*2)+1,Nb*2
           do i=1,NeUp*2
             do j=1,NeUp*2
-               dSEold2AA = dSEold2AA + ( ((tei(pole,a,i,j))**2.0d0) / &
+               SEold2AA = SEold2AA + ( ((tei(pole,a,i,j))**2.0d0) / &
                (EPoleOld+ eps(a) -eps(i)-eps(j))**2 )
             enddo
           enddo 
         enddo
 
-       dSEold1 = -1.0d0*(dSEold1AA/2.0d0)
-       dSEold2 = -1.0d0*(dSEold2AA/2.0d0)
+       SEold1 = -1.0d0*(SEold1AA/2.0d0)
+       SEold2 = -1.0d0*(SEold2AA/2.0d0)
 
        !save 2nd order derivatives
-       secondOrderDeriv = dSEold1+dSEold2
+       secondOrderDeriv = SEold1+SEold2
 
        !B terms: energy independent
        B1=0.0d0 
@@ -504,12 +492,15 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
         !factor 
         B6=(-0.5d0)*B6
 
-
        !no B term derivatives
 
        !Total of B terms
        Bterms=0.5d0*(B1+B2+B5+B6)
 
+
+      
+       !AZ 3/27/34
+       print*,'1/2 Cs term (eV) :',Bterms*27.2114
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!! 
@@ -758,9 +749,9 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        !Cd: B3, B4
 
        !Total of A terms 
-       Aterms=A1+A2+A11+A12
-       Aterms=Aterms + (0.5*(A3+A4+A5+A6+A7+A8+A9+A10))  
- 
+       Aterms=((A11+A12))
+       Aterms=Aterms + (0.5d0*(A7+A8+A9+A10))  
+      
        !Total of 3rd order terms
        thirdOrder=Aterms+Bterms
        !New pole: epsHF + Sigma(2) + Sigma(3)
@@ -1092,8 +1083,8 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
 !add 2nd order derivs as well, put into Newton and PS formula 
 
        !save 3rd order derivs
-       thirdOrderDeriv=0.5*(A3+A4+A5+A6+A7+A8+A9+A10)
-       thirdOrderDeriv=thirdOrderDeriv+A1+A2+A11+A12
+       thirdOrderDeriv=0.5d0*(A7+A8+A9+A10)
+       thirdOrderDeriv=thirdOrderDeriv+((A11+A12))
        !Compute new pole NR step 
        deriv = secondOrderDeriv+thirdOrderDeriv
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(deriv))))
@@ -1104,13 +1095,9 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
 
        if(abs(EPole-EPoleOld).lt.0.00001.or.iter.eq.15) then
        D3 = E
-!       S2ph = SEOld1
-!       S2hp = SEOld2
-!       dS2ph = dSEOld1
-!       dS2hp = dSEOld2
        print*,'Koopmans =',eps(pole)
-       print*,'L3 (Ha) =',D3
-       print*,'L3 (eV) =',D3*27.2114
+       print*,'Q3 (Ha) =',D3
+       print*,'Q3 (eV) =',D3*27.2114
        print*,'PS =',PS
        conver=.true.
        if(iter.eq.15) then 
@@ -1128,912 +1115,6 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
 
 
        enddo!while
-
-!!!!!P3+
-        iter=0 !reset iter for 3rd order 
-
-        PS=0.0d0 !reset PS for 3rd order 
-
-        !reset 2nd and 3rd order collective terms
-        secondOrder=0.0d0
-        thirdOrder=0.0d0
-        secondOrderDeriv=0.0d0
-        thirdOrderDeriv=0.0d0
-        !print*,'P3 before P3+',D3
-        E = (D3)!P3 pole
-        conver = .false. 
-
-        EPoleOld=E
-        do while(conver.eqv..false.)
-       !! print*,'conver',conver 
-
-!Second Order
-!SE1  
-!AA
-        do i=1,Neup*2
-          do a=(NeUp*2)+1,NB*2
-            do b=(NeUp*2)+1,NB*2
-!antisymm?
-               SEold1AA = SEold1AA +( ((tei(pole,i,a,b))**2.0d0) / &
-               (EPoleOld + eps(i) -eps(a)-eps(b)) )
-            enddo
-          enddo 
-        enddo
-
-
-!SE2
-!AA
-        do a=(Neup*2)+1,Nb*2
-          do i=1,NeUp*2 
-            do j=1,NeUp*2
-               SEold2AA = SEold2AA + ( ((tei(pole,a,i,j))**2.0d0) / &
-               (EPoleOld + eps(a) -eps(i)-eps(j)) )
-            enddo
-          enddo 
-        enddo
-     
-
-!new NR instead
-       SEOld1 = SEOld1AA/2.0d0 
-       SEOld2 = SEOld2AA/2.0d0
-!save 2nd order terms
-       secondOrder =  SEOld1+SEOld2
-       EPole = eps(pole) + SEOld1+SEOld2
-!!       print*,'sigma(2)',SEOld1+SEOld2
-!!       print*,'SEOld1',SEOld1
-!!       print*,'SEOld2',SEOld2
-
-!derivatives
-        dSEOld1AA = 0.0d0
-        dSEOld1AB = 0.0d0
-        dSEOld2AA = 0.0d0
-        dSEOld2AB = 0.0d0
-
-       dSEOld1=0.0d0
-       dSEOld2=0.0d0
-!SE1  
-!AA
-        do i=1,Neup*2
-          do a=(NeUp*2)+1,NB*2
-            do b=(NeUp*2)+1,NB*2
-!antisymm?
-               dSEold1AA = dSEold1AA +( ((tei(pole,i,a,b))**2.0d0) / &
-               (EPoleOld + eps(i) -eps(a)-eps(b))**2.0d0 )
-            enddo
-          enddo 
-        enddo
-
-!SE2
-!AA
-        do a=(Neup*2)+1,Nb*2
-          do i=1,NeUp*2
-            do j=1,NeUp*2
-               dSEold2AA = dSEold2AA + ( ((tei(pole,a,i,j))**2.0d0) / &
-               (EPoleOld+ eps(a) -eps(i)-eps(j))**2.0d0 )
-            enddo
-          enddo 
-        enddo
-
-       dSEold1 = -1.0d0*(dSEold1AA/2.0d0)
-       dSEold2 = -1.0d0*(dSEold2AA/2.0d0)
-
-       S2ph=SEOld1
-       S2hp=SEOld2
-       dS2ph=dSEOld1
-       dS2hp=dSEOld2
-       !save 2nd order derivatives
-       secondOrderDeriv = dS2ph+dS2hp
-
-
-!save 2nd order terms
-       secondOrder =  S2ph+S2hp
-
-!derivatives
-       !save 2nd order derivatives
-!       secondOrderDeriv = dS2ph+dS2hp 
-       !print*,'secondOrderDeriv in p3+',secondOrderDeriv
-       !B terms: energy independent
-       B1=0.0d0 
-       B2=0.0d0
-       B3=0.0d0
-       B4=0.0d0
-       B5=0.0d0
-       B6=0.0d0 
-       !Closed-shell, diagonal approx p=q
-!B1     
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B1 = B1 + ( & 
-                        (tei(pole,b,pole,i)*tei(i,j,a,c)*tei(a,c,b,j))/& 
-                        ((eps(i)-eps(b))*(eps(i)+ eps(j) -eps(a)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B1=(0.5d0)*B1
-!B2
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B2 = B2 + ( & 
-                        (tei(pole,a,pole,j)*tei(i,k,a,b)*tei(j,b,i,k))/& 
-                        ((eps(j)-eps(a))*(eps(i)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B2=(-0.5d0)*B2
-!B3
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B3 = B3 + ( & 
-                        (tei(pole,a,pole,b)*tei(i,j,a,c)*tei(b,c,i,j))/& 
-                        ((eps(i)+eps(j)-eps(a)-eps(c))*&
-                        (eps(i)+eps(j)-eps(b)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B3=(0.5d0)*B3
-!B4
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B4 = B4 + ( & 
-                        (tei(pole,j,pole,i)*tei(i,k,a,b)*tei(a,b,j,k))/& 
-                        ((eps(j)+eps(k)-eps(a)-eps(b))*&
-                        (eps(i)+eps(k)-eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B4=(-0.5d0)*B4
-
-!B5
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B5 = B5 + ( & 
-                        (tei(pole,i,pole,a)*tei(b,c,i,j)*tei(a,j,b,c))/& 
-                        ((eps(i)-eps(a))*(eps(i)+ eps(j) -eps(b)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B5=(0.5d0)*B5
-
-!B6 
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B6 = B6 + ( & 
-                        (tei(pole,i,pole,a)*tei(a,b,j,k)*tei(j,k,i,b))/& 
-                        ((eps(i)-eps(a))*(eps(j)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B6=(-0.5d0)*B6
-
-       !no B term derivatives
-
-       !Total of B terms
-       Bterms=0.5d0*(B1+B2+B5+B6)
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!! 
-!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-       !A terms: energy dependent
-       A1=0.0d0
-       A2=0.0d0
-       A3=0.0d0
-       A4=0.0d0
-       A5=0.0d0
-       A6=0.0d0
-       A7=0.0d0
-       A8=0.0d0
-       A9=0.0d0
-       A10=0.0d0
-       A11=0.0d0
-       A12=0.0d0
-!A1 :: has <VV||VV> term
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do a=(NeUp*2)+1,Nb*2
-            do b=(NeUp*2)+1,Nb*2
-              do c=(NeUp*2)+1,Nb*2
-                do d=(NeUp*2)+1,Nb*2
-                   A1 = A1 + ( & 
-                        (tei(pole,i,a,c)*tei(a,c,b,d)*tei(b,d,pole,i))/& 
-                        ((EPoleOld+eps(i)-eps(a)-eps(c))*&
-                        (EPoleOld+ eps(i) -eps(b)-eps(d)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A1=(0.25d0)*A1
-
-!A2
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A2 = A2 + ( & 
-                        (tei(pole,i,a,c)*tei(a,j,b,i)*tei(b,c,pole,j))/& 
-                        ((EPoleOld+eps(i)-eps(a)-eps(c))*&
-                        (EPoleOld+ eps(j) -eps(b)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A2=(-1.0d0)*A2
-!A3
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A3 = A3 + ( & 
-                        (tei(pole,b,i,c)*tei(i,j,a,b)*tei(a,c,pole,j))/& 
-                        ((EPoleOld+eps(j)-eps(a)-eps(c))*&
-                        (eps(i)+ eps(j) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A3=(-1.0d0)*A3
-!A4
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A4 = A4 + ( & 
-                        (tei(pole,k,i,j)*tei(i,j,a,b)*tei(a,b,pole,k))/& 
-                        ((EPoleOld+eps(k)-eps(a)-eps(b))*&
-                        (eps(i)+ eps(j) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A4=(0.25d0)*A4
-!A5
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A5 = A5 + ( & 
-                        (tei(pole,j,a,b)*tei(a,c,i,j)*tei(i,b,pole,c))/& 
-                        ((EPoleOld+eps(j)-eps(a)-eps(b))*&
-                        (eps(i)+ eps(j) -eps(a)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A5=(-1.0d0)*A5
-!A6
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A6 = A6 + ( & 
-                        (tei(pole,j,a,b)*tei(a,b,i,k)*tei(i,k,pole,j))/& 
-                        ((EPoleOld+eps(j)-eps(a)-eps(b))*&
-                        (eps(i)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A6=(0.25d0)*A6
-!A7
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A7 = A7 + ( & 
-                        (tei(pole,c,i,j)*tei(i,j,a,b)*tei(a,b,pole,c))/& 
-                        ((eps(i)+eps(j)-EPoleOld-eps(c))*&
-                        (eps(i)+ eps(j) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A7=(-0.25d0)*A7
-!A8
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A8 = A8 + ( & 
-                        (tei(pole,b,i,k)*tei(i,j,a,b)*tei(a,k,pole,j))/& 
-                        ((eps(i)+eps(k)-EPoleOld-eps(b))*&
-                        (eps(i)+ eps(j) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A8=(1.0d0)*A8
-
-!A9
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A9 = A9 + ( & 
-                        (tei(pole,b,a,c)*tei(a,c,i,j)*tei(i,j,pole,b))/& 
-                        ((eps(i)+eps(j)-EPoleOld-eps(b))*&
-                        (eps(i)+ eps(j) -eps(a)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A9=(-0.25d0)*A9
-
-!A10
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A10 = A10 + ( & 
-                        (tei(pole,k,a,j)*tei(a,b,i,k)*tei(i,j,pole,b))/& 
-                        ((eps(i)+eps(j)-EPoleOld-eps(b))*&
-                        (eps(i)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A10=(1.0d0)*A10
-
-!A11
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A11 = A11 + ( & 
-                        (tei(pole,b,i,k)*tei(i,a,j,b)*tei(j,k,pole,a))/& 
-                        ((eps(j)+eps(k)-EPoleOld-eps(a))*&
-                        (eps(i)+ eps(k) -EPoleOld-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A11=(1.0d0)*A11
-!A12 :: has <OO||OO> term
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do l=1,NeUp*2
-                do a=(NeUp*2)+1,Nb*2
-                   A12 = A12 + ( & 
-                        (tei(pole,a,i,l)*tei(i,l,j,k)*tei(j,k,pole,a))/& 
-                        ((eps(j)+eps(k)-EPoleOld-eps(a))*&
-                        (eps(i)+ eps(l) -EPoleOld-eps(a)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        A12=(-0.25d0)*A12
-
-       !L3 terms
-       !R2ph: A1, A2
-       !R2hp: A11, A12 
-       !P2ph: A3-A6
-       !P2hp: A7-A10 
-       !Cs: B1, B2, B5, B6
-       !Cd: B3, B4
-
-      
-       P2ph = A3+A4+A5+A6
-       P2hp = A7+A8+A9+A10
-       R2ph = A1+A2
-       R2hp = A11+A12 
-       !p3+ self energy
-       !print*,'S2ph and S2hp in p3+',S2ph,S2hp
-       !print*,'dS2ph and dS2hp in p3+',dS2ph,dS2hp
-       !print*,'in P3+: S2hp',S2hp
-       !print*,'in P3+: P2hp',P2hp
-       !print*,'in P3+: R2hp',R2hp
-  
-       !L3 2ph and 2hp treated equally
-       Aterms=(((S2hp)/(S2hp-(P2hp/2.0d0)))*&
-              (R2hp+(P2hp/2.0d0)))
-       Aterms=Aterms+(((S2ph)/(S2ph-(P2ph/2.0d0)))*&
-              (R2ph+(P2ph/2.0d0)))
-
-
-
-
-
-       !Total of A terms 
-
-       !Total of 3rd order terms
-       thirdOrder=Aterms+Bterms
-       !New pole: epsHF + Sigma(2) + Sigma(3)
-       EPole = eps(pole) + secondOrder + thirdOrder
-
-       !A term derivatives
-       !like 2nd order, use the 3rd order A term vars for deriv vars
-       !square denoms with E
-       A1=0.0d0
-       A2=0.0d0
-       A3=0.0d0
-       A4=0.0d0
-       A5=0.0d0
-       A6=0.0d0
-       A7=0.0d0
-       A8=0.0d0
-       A9=0.0d0
-       A10=0.0d0
-       A11=0.0d0
-       A12=0.0d0
-
-!AZ fix deriv terms u'v+uv'
-!derivA1 :: derivs with 2 EPoleOld have factor (-1)*(-1)=1
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do a=(NeUp*2)+1,Nb*2
-            do b=(NeUp*2)+1,Nb*2
-              do c=(NeUp*2)+1,Nb*2
-                do d=(NeUp*2)+1,Nb*2
-                   A1 = A1 + (-0.25d0)*( & 
-                        (tei(pole,i,a,c)*tei(a,c,b,d)*tei(b,d,pole,i))/& 
-                        (((EPoleOld+eps(i)-eps(a)-eps(c)))*&
-                        ((EPoleOld+ eps(i) -eps(b)-eps(d))**2.0d0))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !A1=(-1.0d0)*A1 
-        !A1=(-0.25d0)*A1 !0.25
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do a=(NeUp*2)+1,Nb*2
-            do b=(NeUp*2)+1,Nb*2
-              do c=(NeUp*2)+1,Nb*2
-                do d=(NeUp*2)+1,Nb*2
-                   A1 = A1 +  (-0.25d0)*( & 
-                        (tei(pole,i,a,c)*tei(a,c,b,d)*tei(b,d,pole,i))/& 
-                        (((EPoleOld+eps(i)-eps(a)-eps(c))**2.0d0)*&
-                        ((EPoleOld+ eps(i) -eps(b)-eps(d))))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-       ! A1=(-0.25d0)*A1 !0.25
-        !deriv factor 
-        !A1=(-1.0d0)*A1 !change sign? AZ 2/22
-!derivA2 (-1)*(-1)
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A2 = A2 +  (1.0d0)*( & 
-                        (tei(pole,i,a,c)*tei(a,j,b,i)*tei(b,c,pole,j))/& 
-                        (((EPoleOld+eps(i)-eps(a)-eps(c)))*&
-                        ((EPoleOld+ eps(j) -eps(b)-eps(c))**2.0d0))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !A2=(-1.0d0)*A2
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A2 = A2 + (1.0d0)*( & 
-                        (tei(pole,i,a,c)*tei(a,j,b,i)*tei(b,c,pole,j))/& 
-                        (((EPoleOld+eps(i)-eps(a)-eps(c))**2.0d0)*&
-                        ((EPoleOld+ eps(j) -eps(b)-eps(c))))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A2=(-1.0d0)*A2 !-1 
-        !deriv factor
-        !A2=(-1.0d0)*A2 !change sign? AZ 2/22
-!derivA3 :: one E in deriv, (-1) factor 
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A3 = A3 + (1.0d0)*( & 
-                        (tei(pole,b,i,c)*tei(i,j,a,b)*tei(a,c,pole,j))/& 
-                        (((EPoleOld+eps(j)-eps(a)-eps(c))**2.0d0)*&
-                        (eps(i)+ eps(j) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A3=(-1.0d0)*A3 !-1
-        !deriv factor
-        !A3=(1.0d0)*A3 !change sign? AZ 2/22
-!derivA4 :: (-1)
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A4 = A4 + (-0.25d0)*( & 
-                        (tei(pole,k,i,j)*tei(i,j,a,b)*tei(a,b,pole,k))/& 
-                        (((EPoleOld+eps(k)-eps(a)-eps(b))**2.0d0)*&
-                        (eps(i)+ eps(j) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A4=(0.25d0)*A4 !0.25
-        !deriv factor
-        !A4=(-1.0d0)*A4 
-!derivA5 :: (-1)
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A5 = A5 + (1.0d0)*( & 
-                        (tei(pole,j,a,b)*tei(a,c,i,j)*tei(i,b,pole,c))/& 
-                        (((EPoleOld+eps(j)-eps(a)-eps(b))**2.0d0)*&
-                        (eps(i)+ eps(j) -eps(a)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A5=(-1.0d0)*A5 !-1
-        !deriv factor
-        !A5=(-1.0d0)*A5
-!derivA6 :: (-1)
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A6 = A6 + (-0.25d0)*( & 
-                        (tei(pole,j,a,b)*tei(a,b,i,k)*tei(i,k,pole,j))/& 
-                        (((EPoleOld+eps(j)-eps(a)-eps(b))**2.0d0)*&
-                        (eps(i)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A6=(0.25d0)*A6 !0.25
-        !deriv factor 
-        !A6=(-1.0d0)*A6
-!derivA7 :: (+1) since -EPole 
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A7 = A7 + (-0.25d0)*( & 
-                        (tei(pole,c,i,j)*tei(i,j,a,b)*tei(a,b,pole,c))/& 
-                        (((eps(i)+eps(j)-EPoleOld-eps(c))**2.0d0)*&
-                        (eps(i)+ eps(j) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A7=(-0.25d0)*A7 !-0.25
-        !deriv factor
-        !A7=(1.0d0)*A7 
-!derivA8 :: (+1) since -EPole
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A8 = A8 + (1.0d0)*( & 
-                        (tei(pole,b,i,k)*tei(i,j,a,b)*tei(a,k,pole,j))/& 
-                        (((eps(i)+eps(k)-EPoleOld-eps(b))**2.0d0)*&
-                        (eps(i)+ eps(j) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A8=(1.0d0)*A8  !1
-        !deriv factor 
-        !A8=(1.0d0)*A8
-!derivA9 :: (+1) since -Epole
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   A9 = A9 + (-0.25d0)*( & 
-                        (tei(pole,b,a,c)*tei(a,c,i,j)*tei(i,j,pole,b))/& 
-                        (((eps(i)+eps(j)-EPoleOld-eps(b))**2.0d0)*&
-                        (eps(i)+ eps(j) -eps(a)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A9=(-0.25d0)*A9 !-0.25
-        !deriv factor
-        !A9=(1.0d0)*A9 
-!derivA10 :: (+1) since -EPole
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A10 = A10 + (1.0d0)*( & 
-                        (tei(pole,k,a,j)*tei(a,b,i,k)*tei(i,j,pole,b))/& 
-                        (((eps(i)+eps(j)-EPoleOld-eps(b))**2.0d0)*&
-                        (eps(i)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A10=(1.0d0)*A10 !1
-        !deriv factor
-        !A10=(1.0d0)*A10
-!derivA11 :: (+1)*(+1)=(+1) since -Epole and -Epole
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A11 = A11 + (1.0d0)*( & 
-                        (tei(pole,b,i,k)*tei(i,a,j,b)*tei(j,k,pole,a))/& 
-                        (((eps(j)+eps(k)-EPoleOld-eps(a))**2.0d0)*&
-                        (eps(i)+ eps(k) -EPoleOld-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !A11=(1.0d0)*A11 
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   A11 = A11 + (1.0d0)*( & 
-                        (tei(pole,b,i,k)*tei(i,a,j,b)*tei(j,k,pole,a))/& 
-                        ((eps(j)+eps(k)-EPoleOld-eps(a))*&
-                        ((eps(i)+ eps(k) -EPoleOld-eps(b))**2.0d0))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A11=(1.0d0)*A11 !1
-        !deriv factor
-        !A11=(1.0d0)*A11
-!derivA12 ::  (+1)*(+1)=(+1) since -Epole and -Epole
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do l=1,NeUp*2
-                do a=(NeUp*2)+1,Nb*2
-                   A12 = A12 + (-0.25d0)*( & 
-                        (tei(pole,a,i,l)*tei(i,l,j,k)*tei(j,k,pole,a))/& 
-                        (((eps(j)+eps(k)-EPoleOld-eps(a))**2.0d0)*&
-                        (eps(i)+ eps(l) -EPoleOld-eps(a)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !A12=(1.0d0)*A12
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do l=1,NeUp*2
-                do a=(NeUp*2)+1,Nb*2
-                   A12 = A12 + (-0.25d0)*( & 
-                        (tei(pole,a,i,l)*tei(i,l,j,k)*tei(j,k,pole,a))/& 
-                        ((eps(j)+eps(k)-EPoleOld-eps(a))*&
-                        ((eps(i)+ eps(l) -EPoleOld-eps(a))**2.0d0))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        !A12=(-0.25d0)*A12 !-0.25
-        !deriv factor
-        !A12=(1.0d0)*A12 !change sign?
-!AZ 2/21 
-!now sum derivs, check the terms with 2 pole variables, check ()'s
-!add 2nd order derivs as well, put into Newton and PS formula 
-      
-       dP2ph = A3+A4+A5+A6
-       dP2hp = A7+A8+A9+A10
-       dR2ph = A1+A2
-       dR2hp = A11+A12 
-
-!not quite this V
-!!       Aterms=(S2hp)/(S2hp-(P2hp/2.0d0))
-
-       !L3 2ph and 2hp treated equally
-       Aterms=(((1.0d0) / &
-              (1.0d0 - &
-              (((dP2hp*0.5d0)/(dS2hp))) &
-              ))*&
-              ((dR2hp+(dP2hp/2.0d0))))
-       Aterms=Aterms+&
-              (((1.0d0) / &
-              (1.0d0 - &
-              (((dP2ph*0.5d0)/(dS2ph))) &
-              ))*&
-              ((dR2ph+(dP2ph/2.0d0))))
-
-
-
-
-       !A term derivs
-       !reuse A terms for derivs  
-!       Aterms=(R2hp*(0.5*((S2hp*dP2hp)-(P2hp*dS2hp))))+&
-!              ((S2hp*dR2hp)*(S2hp-(0.5*P2hp))) / & 
-!              ((S2hp-(0.5*P2hp))**2)
-!       Aterms=Aterms+&
-!              (R2ph*(0.5*((S2ph*dP2ph)-(P2ph*dS2ph))))+&
-!              ((S2ph*dR2ph)*(S2ph-(0.5*P2ph))) / & 
-!              ((S2ph-(0.5*P2ph))**2)
-!       Aterms=Aterms+&
-!              (P2ph*(0.5*((S2ph*dP2ph)-(P2ph*dS2ph))))+&
-!              ((S2ph*dP2ph)*(S2ph-(0.5*P2ph))) / & 
-!              ((S2ph-(0.5*P2ph))**2)
-!       Aterms=Aterms+&
-!              (P2hp*(0.5*((S2hp*dP2hp)-(P2hp*dS2hp))))+&
-!              ((S2hp*dP2hp)*(S2hp-(0.5*P2hp))) / & 
-!              ((S2hp-(0.5*P2hp))**2)
-
-
-       !thirdOrderDeriv=0.5*(A3+A4+A5+A6+A7+A8+A9+A10)
-       !thirdOrderDeriv=thirdOrderDeriv+A1+A2+A11+A12
-       thirdOrderDeriv = Aterms 
-       !Compute new pole NR step 
-       deriv = secondOrderDeriv+thirdOrderDeriv
-       E = (EpoleOld - ((EpoleOld-Epole)/(1-(deriv))))
-       PS = 1/(1-(deriv))
-       print*,'E after NRstep',E      
-
-
-       iter=iter+1
-
-       if(abs(EPole-EPoleOld).lt.0.00001.or.iter.eq.15) then
-       D3 = E
-       print*,'Koopmans =',eps(pole)
-       print*,'L3+B (Ha) =',D3
-       print*,'L3+B (eV) =',D3*27.2114
-       print*,'PS =',PS
-       conver=.true.
-       if(iter.eq.15) then 
-         print*,'pole not converged after',iter,'iter'
-       endif 
-       endif 
-
-       EPoleOld=E
-       SEOld1=0.0d0
-       SEOld2=0.0d0
-        SEOld1AA = 0.0d0
-        SEOld1AB = 0.0d0
-        SEOld2AA = 0.0d0
-        SEOld2AB = 0.0d0
-
-
-       enddo!while
-
-
-!!!!!Q3+
 
 
 !!!!!!!!! END 3rd Order
@@ -2059,5 +1140,5 @@ contains
       end function kronecker
 
  
-        END SUBROUTINE EPL3plusB
+        END SUBROUTINE EPQ3so
     

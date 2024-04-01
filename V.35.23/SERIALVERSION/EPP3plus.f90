@@ -1,4 +1,4 @@
-SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce,SPINCONSERVE)
+SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce,SPINCONSERVE)
       ! 
       !
 
@@ -397,119 +397,12 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        B5=0.0d0
        B6=0.0d0 
        !Closed-shell, diagonal approx p=q
-!B1     
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B1 = B1 + ( & 
-                        (tei(pole,b,pole,i)*tei(i,j,a,c)*tei(a,c,b,j))/& 
-                        ((eps(i)-eps(b))*(eps(i)+ eps(j) -eps(a)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B1=(0.5d0)*B1
-!B2
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B2 = B2 + ( & 
-                        (tei(pole,a,pole,j)*tei(i,k,a,b)*tei(j,b,i,k))/& 
-                        ((eps(j)-eps(a))*(eps(i)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B2=(-0.5d0)*B2
-!B3
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B3 = B3 + ( & 
-                        (tei(pole,a,pole,b)*tei(i,j,a,c)*tei(b,c,i,j))/& 
-                        ((eps(i)+eps(j)-eps(a)-eps(c))*&
-                        (eps(i)+eps(j)-eps(b)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B3=(0.5d0)*B3
-!B4
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B4 = B4 + ( & 
-                        (tei(pole,j,pole,i)*tei(i,k,a,b)*tei(a,b,j,k))/& 
-                        ((eps(j)+eps(k)-eps(a)-eps(b))*&
-                        (eps(i)+eps(k)-eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B4=(-0.5d0)*B4
-
-!B5
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B5 = B5 + ( & 
-                        (tei(pole,i,pole,a)*tei(b,c,i,j)*tei(a,j,b,c))/& 
-                        ((eps(i)-eps(a))*(eps(i)+ eps(j) -eps(b)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B5=(0.5d0)*B5
-
-!B6 
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B6 = B6 + ( & 
-                        (tei(pole,i,pole,a)*tei(a,b,j,k)*tei(j,k,i,b))/& 
-                        ((eps(i)-eps(a))*(eps(j)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B6=(-0.5d0)*B6
-
-
        !no B term derivatives
 
        !Total of B terms
-       Bterms=0.5d0*(B1+B2+B5+B6)
-
+       !Bterms=B1+B2+B3+B4+B5+B6 
+       !Bterms=0.5*(B1+B2+B5+B6)  
+        Bterms=0.0d0 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!! 
@@ -758,11 +651,11 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        !Cd: B3, B4
 
        !Total of A terms 
-       Aterms=A1+A2+A11+A12
-       Aterms=Aterms + (0.5*(A3+A4+A5+A6+A7+A8+A9+A10))  
- 
+       Aterms=((A11+A12))
+       Aterms=Aterms + (0.5*(A7+A8+A9+A10))  
+      
        !Total of 3rd order terms
-       thirdOrder=Aterms+Bterms
+       thirdOrder=Aterms!+Bterms
        !New pole: epsHF + Sigma(2) + Sigma(3)
        EPole = eps(pole) + secondOrder + thirdOrder
 
@@ -1092,8 +985,8 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
 !add 2nd order derivs as well, put into Newton and PS formula 
 
        !save 3rd order derivs
-       thirdOrderDeriv=0.5*(A3+A4+A5+A6+A7+A8+A9+A10)
-       thirdOrderDeriv=thirdOrderDeriv+A1+A2+A11+A12
+       thirdOrderDeriv=0.5*(A7+A8+A9+A10)
+       thirdOrderDeriv=thirdOrderDeriv+((A11+A12))
        !Compute new pole NR step 
        deriv = secondOrderDeriv+thirdOrderDeriv
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(deriv))))
@@ -1104,13 +997,13 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
 
        if(abs(EPole-EPoleOld).lt.0.00001.or.iter.eq.15) then
        D3 = E
-!       S2ph = SEOld1
-!       S2hp = SEOld2
-!       dS2ph = dSEOld1
-!       dS2hp = dSEOld2
+       S2ph = SEOld1
+       S2hp = SEOld2
+       dS2ph = dSEOld1
+       dS2hp = dSEOld2
        print*,'Koopmans =',eps(pole)
-       print*,'L3 (Ha) =',D3
-       print*,'L3 (eV) =',D3*27.2114
+       print*,'P3 (Ha) =',D3
+       print*,'P3 (eV) =',D3*27.2114
        print*,'PS =',PS
        conver=.true.
        if(iter.eq.15) then 
@@ -1140,7 +1033,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
         secondOrderDeriv=0.0d0
         thirdOrderDeriv=0.0d0
         !print*,'P3 before P3+',D3
-        E = (D3)!P3 pole
+        E = (D3)!(D3)!P3 pole
         conver = .false. 
 
         EPoleOld=E
@@ -1198,7 +1091,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
             do b=(NeUp*2)+1,NB*2
 !antisymm?
                dSEold1AA = dSEold1AA +( ((tei(pole,i,a,b))**2.0d0) / &
-               (EPoleOld + eps(i) -eps(a)-eps(b))**2.0d0 )
+               (EPoleOld + eps(i) -eps(a)-eps(b))**2 )
             enddo
           enddo 
         enddo
@@ -1209,7 +1102,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
           do i=1,NeUp*2
             do j=1,NeUp*2
                dSEold2AA = dSEold2AA + ( ((tei(pole,a,i,j))**2.0d0) / &
-               (EPoleOld+ eps(a) -eps(i)-eps(j))**2.0d0 )
+               (EPoleOld+ eps(a) -eps(i)-eps(j))**2 )
             enddo
           enddo 
         enddo
@@ -1233,125 +1126,10 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
 !       secondOrderDeriv = dS2ph+dS2hp 
        !print*,'secondOrderDeriv in p3+',secondOrderDeriv
        !B terms: energy independent
-       B1=0.0d0 
-       B2=0.0d0
-       B3=0.0d0
-       B4=0.0d0
-       B5=0.0d0
-       B6=0.0d0 
-       !Closed-shell, diagonal approx p=q
-!B1     
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B1 = B1 + ( & 
-                        (tei(pole,b,pole,i)*tei(i,j,a,c)*tei(a,c,b,j))/& 
-                        ((eps(i)-eps(b))*(eps(i)+ eps(j) -eps(a)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B1=(0.5d0)*B1
-!B2
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B2 = B2 + ( & 
-                        (tei(pole,a,pole,j)*tei(i,k,a,b)*tei(j,b,i,k))/& 
-                        ((eps(j)-eps(a))*(eps(i)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B2=(-0.5d0)*B2
-!B3
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B3 = B3 + ( & 
-                        (tei(pole,a,pole,b)*tei(i,j,a,c)*tei(b,c,i,j))/& 
-                        ((eps(i)+eps(j)-eps(a)-eps(c))*&
-                        (eps(i)+eps(j)-eps(b)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B3=(0.5d0)*B3
-!B4
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B4 = B4 + ( & 
-                        (tei(pole,j,pole,i)*tei(i,k,a,b)*tei(a,b,j,k))/& 
-                        ((eps(j)+eps(k)-eps(a)-eps(b))*&
-                        (eps(i)+eps(k)-eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B4=(-0.5d0)*B4
 
-!B5
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B5 = B5 + ( & 
-                        (tei(pole,i,pole,a)*tei(b,c,i,j)*tei(a,j,b,c))/& 
-                        ((eps(i)-eps(a))*(eps(i)+ eps(j) -eps(b)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B5=(0.5d0)*B5
 
-!B6 
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B6 = B6 + ( & 
-                        (tei(pole,i,pole,a)*tei(a,b,j,k)*tei(j,k,i,b))/& 
-                        ((eps(i)-eps(a))*(eps(j)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B6=(-0.5d0)*B6
 
-       !no B term derivatives
-
-       !Total of B terms
-       Bterms=0.5d0*(B1+B2+B5+B6)
-
+        Bterms=0.0d0 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!! 
@@ -1610,12 +1388,8 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        !print*,'in P3+: S2hp',S2hp
        !print*,'in P3+: P2hp',P2hp
        !print*,'in P3+: R2hp',R2hp
-  
-       !L3 2ph and 2hp treated equally
-       Aterms=(((S2hp)/(S2hp-(P2hp/2.0d0)))*&
-              (R2hp+(P2hp/2.0d0)))
-       Aterms=Aterms+(((S2ph)/(S2ph-(P2ph/2.0d0)))*&
-              (R2ph+(P2ph/2.0d0)))
+       Aterms=(S2hp)/(S2hp-(P2hp/2.0d0))
+       Aterms=Aterms*(R2hp+(P2hp/2.0d0))
 
 
 
@@ -1624,7 +1398,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        !Total of A terms 
 
        !Total of 3rd order terms
-       thirdOrder=Aterms+Bterms
+       thirdOrder=Aterms!+Bterms
        !New pole: epsHF + Sigma(2) + Sigma(3)
        EPole = eps(pole) + secondOrder + thirdOrder
 
@@ -1654,7 +1428,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                    A1 = A1 + (-0.25d0)*( & 
                         (tei(pole,i,a,c)*tei(a,c,b,d)*tei(b,d,pole,i))/& 
                         (((EPoleOld+eps(i)-eps(a)-eps(c)))*&
-                        ((EPoleOld+ eps(i) -eps(b)-eps(d))**2.0d0))&
+                        ((EPoleOld+ eps(i) -eps(b)-eps(d))**2))&
                              )
                 enddo 
               enddo 
@@ -1670,7 +1444,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do d=(NeUp*2)+1,Nb*2
                    A1 = A1 +  (-0.25d0)*( & 
                         (tei(pole,i,a,c)*tei(a,c,b,d)*tei(b,d,pole,i))/& 
-                        (((EPoleOld+eps(i)-eps(a)-eps(c))**2.0d0)*&
+                        (((EPoleOld+eps(i)-eps(a)-eps(c))**2)*&
                         ((EPoleOld+ eps(i) -eps(b)-eps(d))))&
                              )
                 enddo 
@@ -1691,7 +1465,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                    A2 = A2 +  (1.0d0)*( & 
                         (tei(pole,i,a,c)*tei(a,j,b,i)*tei(b,c,pole,j))/& 
                         (((EPoleOld+eps(i)-eps(a)-eps(c)))*&
-                        ((EPoleOld+ eps(j) -eps(b)-eps(c))**2.0d0))&
+                        ((EPoleOld+ eps(j) -eps(b)-eps(c))**2))&
                              )
                 enddo 
               enddo 
@@ -1706,7 +1480,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do c=(NeUp*2)+1,Nb*2
                    A2 = A2 + (1.0d0)*( & 
                         (tei(pole,i,a,c)*tei(a,j,b,i)*tei(b,c,pole,j))/& 
-                        (((EPoleOld+eps(i)-eps(a)-eps(c))**2.0d0)*&
+                        (((EPoleOld+eps(i)-eps(a)-eps(c))**2)*&
                         ((EPoleOld+ eps(j) -eps(b)-eps(c))))&
                              )
                 enddo 
@@ -1726,7 +1500,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do c=(NeUp*2)+1,Nb*2
                    A3 = A3 + (1.0d0)*( & 
                         (tei(pole,b,i,c)*tei(i,j,a,b)*tei(a,c,pole,j))/& 
-                        (((EPoleOld+eps(j)-eps(a)-eps(c))**2.0d0)*&
+                        (((EPoleOld+eps(j)-eps(a)-eps(c))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(b)))&
                              )
                 enddo 
@@ -1746,7 +1520,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do b=(NeUp*2)+1,Nb*2
                    A4 = A4 + (-0.25d0)*( & 
                         (tei(pole,k,i,j)*tei(i,j,a,b)*tei(a,b,pole,k))/& 
-                        (((EPoleOld+eps(k)-eps(a)-eps(b))**2.0d0)*&
+                        (((EPoleOld+eps(k)-eps(a)-eps(b))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(b)))&
                              )
                 enddo 
@@ -1766,7 +1540,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do c=(NeUp*2)+1,Nb*2
                    A5 = A5 + (1.0d0)*( & 
                         (tei(pole,j,a,b)*tei(a,c,i,j)*tei(i,b,pole,c))/& 
-                        (((EPoleOld+eps(j)-eps(a)-eps(b))**2.0d0)*&
+                        (((EPoleOld+eps(j)-eps(a)-eps(b))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(c)))&
                              )
                 enddo 
@@ -1786,7 +1560,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do b=(NeUp*2)+1,Nb*2
                    A6 = A6 + (-0.25d0)*( & 
                         (tei(pole,j,a,b)*tei(a,b,i,k)*tei(i,k,pole,j))/& 
-                        (((EPoleOld+eps(j)-eps(a)-eps(b))**2.0d0)*&
+                        (((EPoleOld+eps(j)-eps(a)-eps(b))**2)*&
                         (eps(i)+ eps(k) -eps(a)-eps(b)))&
                              )
                 enddo 
@@ -1806,7 +1580,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do c=(NeUp*2)+1,Nb*2
                    A7 = A7 + (-0.25d0)*( & 
                         (tei(pole,c,i,j)*tei(i,j,a,b)*tei(a,b,pole,c))/& 
-                        (((eps(i)+eps(j)-EPoleOld-eps(c))**2.0d0)*&
+                        (((eps(i)+eps(j)-EPoleOld-eps(c))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(b)))&
                              )
                 enddo 
@@ -1826,7 +1600,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do b=(NeUp*2)+1,Nb*2
                    A8 = A8 + (1.0d0)*( & 
                         (tei(pole,b,i,k)*tei(i,j,a,b)*tei(a,k,pole,j))/& 
-                        (((eps(i)+eps(k)-EPoleOld-eps(b))**2.0d0)*&
+                        (((eps(i)+eps(k)-EPoleOld-eps(b))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(b)))&
                              )
                 enddo 
@@ -1846,7 +1620,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do c=(NeUp*2)+1,Nb*2
                    A9 = A9 + (-0.25d0)*( & 
                         (tei(pole,b,a,c)*tei(a,c,i,j)*tei(i,j,pole,b))/& 
-                        (((eps(i)+eps(j)-EPoleOld-eps(b))**2.0d0)*&
+                        (((eps(i)+eps(j)-EPoleOld-eps(b))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(c)))&
                              )
                 enddo 
@@ -1866,7 +1640,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do b=(NeUp*2)+1,Nb*2
                    A10 = A10 + (1.0d0)*( & 
                         (tei(pole,k,a,j)*tei(a,b,i,k)*tei(i,j,pole,b))/& 
-                        (((eps(i)+eps(j)-EPoleOld-eps(b))**2.0d0)*&
+                        (((eps(i)+eps(j)-EPoleOld-eps(b))**2)*&
                         (eps(i)+ eps(k) -eps(a)-eps(b)))&
                              )
                 enddo 
@@ -1886,7 +1660,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do b=(NeUp*2)+1,Nb*2
                    A11 = A11 + (1.0d0)*( & 
                         (tei(pole,b,i,k)*tei(i,a,j,b)*tei(j,k,pole,a))/& 
-                        (((eps(j)+eps(k)-EPoleOld-eps(a))**2.0d0)*&
+                        (((eps(j)+eps(k)-EPoleOld-eps(a))**2)*&
                         (eps(i)+ eps(k) -EPoleOld-eps(b)))&
                              )
                 enddo 
@@ -1903,7 +1677,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                    A11 = A11 + (1.0d0)*( & 
                         (tei(pole,b,i,k)*tei(i,a,j,b)*tei(j,k,pole,a))/& 
                         ((eps(j)+eps(k)-EPoleOld-eps(a))*&
-                        ((eps(i)+ eps(k) -EPoleOld-eps(b))**2.0d0))&
+                        ((eps(i)+ eps(k) -EPoleOld-eps(b))**2))&
                              )
                 enddo 
               enddo 
@@ -1922,7 +1696,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                 do a=(NeUp*2)+1,Nb*2
                    A12 = A12 + (-0.25d0)*( & 
                         (tei(pole,a,i,l)*tei(i,l,j,k)*tei(j,k,pole,a))/& 
-                        (((eps(j)+eps(k)-EPoleOld-eps(a))**2.0d0)*&
+                        (((eps(j)+eps(k)-EPoleOld-eps(a))**2)*&
                         (eps(i)+ eps(l) -EPoleOld-eps(a)))&
                              )
                 enddo 
@@ -1939,7 +1713,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
                    A12 = A12 + (-0.25d0)*( & 
                         (tei(pole,a,i,l)*tei(i,l,j,k)*tei(j,k,pole,a))/& 
                         ((eps(j)+eps(k)-EPoleOld-eps(a))*&
-                        ((eps(i)+ eps(l) -EPoleOld-eps(a))**2.0d0))&
+                        ((eps(i)+ eps(l) -EPoleOld-eps(a))**2))&
                              )
                 enddo 
               enddo 
@@ -1960,23 +1734,12 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        dR2hp = A11+A12 
 
 !not quite this V
-!!       Aterms=(S2hp)/(S2hp-(P2hp/2.0d0))
-
-       !L3 2ph and 2hp treated equally
-       Aterms=(((1.0d0) / &
+!!!       Aterms=(dS2hp)/(dS2hp-(dP2hp/2.0d0))
+       Aterms=(1.0d0) / &
               (1.0d0 - &
               (((dP2hp*0.5d0)/(dS2hp))) &
-              ))*&
-              ((dR2hp+(dP2hp/2.0d0))))
-       Aterms=Aterms+&
-              (((1.0d0) / &
-              (1.0d0 - &
-              (((dP2ph*0.5d0)/(dS2ph))) &
-              ))*&
-              ((dR2ph+(dP2ph/2.0d0))))
-
-
-
+              )
+       Aterms=Aterms*(dR2hp+(dP2hp/2.0d0))
 
        !A term derivs
        !reuse A terms for derivs  
@@ -2002,6 +1765,14 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        thirdOrderDeriv = Aterms 
        !Compute new pole NR step 
        deriv = secondOrderDeriv+thirdOrderDeriv
+!       print*,'S2hp',S2hp
+!       print*,'dS2hp',dS2hp
+!       print*,'P2hp',P2hp
+!       print*,'dP2hp',dP2hp
+!       print*,'R2hp',R2hp
+!       print*,'dR2hp',dR2hp
+ 
+       print*,'Deriv',deriv
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(deriv))))
        PS = 1/(1-(deriv))
        print*,'E after NRstep',E      
@@ -2012,8 +1783,8 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        if(abs(EPole-EPoleOld).lt.0.00001.or.iter.eq.15) then
        D3 = E
        print*,'Koopmans =',eps(pole)
-       print*,'L3+B (Ha) =',D3
-       print*,'L3+B (eV) =',D3*27.2114
+       print*,'P3+ (Ha) =',D3
+       print*,'P3+ (eV) =',D3*27.2114
        print*,'PS =',PS
        conver=.true.
        if(iter.eq.15) then 
@@ -2033,7 +1804,7 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        enddo!while
 
 
-!!!!!Q3+
+!!!!!P3+
 
 
 !!!!!!!!! END 3rd Order
@@ -2059,5 +1830,5 @@ contains
       end function kronecker
 
  
-        END SUBROUTINE EPL3plusB
+        END SUBROUTINE EPP3plus
     
