@@ -1106,7 +1106,7 @@ SUBROUTINE EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        print*,'R3 P2hp (Ha)',P2hp 
        print*,'R3 P2ph (Ha)',P2ph
        print*,'R3 R2hp (Ha)',R2hp
-       print*,'R3 R2hp (Ha)',R2ph
+       print*,'R3 R2ph (Ha)',R2ph
        print*,'R3 CS:  (Ha)',CS
        print*,'R3 CD:  (Ha)',CD     
        print*,'D3 (Ha) =',D3
