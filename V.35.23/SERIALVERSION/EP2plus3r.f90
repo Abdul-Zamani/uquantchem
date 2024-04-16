@@ -30,7 +30,7 @@ SUBROUTINE EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
       DOUBLE PRECISION :: D2, D3,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,&
                           B1,B2,B3,B4,B5,B6,Aterms,Bterms,&
                           secondOrder,thirdOrder,&
-                          P2ph,P2hp,CS,CD,R2ph,R2hp,&
+                          S2ph,S2hp,P2ph,P2hp,CS,CD,R2ph,R2hp,&
                           secondOrderDeriv,thirdOrderDeriv,deriv
       INTEGER :: a,b,c,d,r,s,pole,mu,nu,lam,sig,neup,nedown,iter
      
@@ -176,7 +176,8 @@ SUBROUTINE EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
         SEOld1AB = 0.0d0
         SEOld2AA = 0.0d0
         SEOld2AB = 0.0d0
-
+        S2ph = 0.0d0
+        S2hp = 0.0d0 
 
         SEold1 = 0.0d0
         SEold2 = 0.0d0
@@ -219,6 +220,8 @@ SUBROUTINE EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
 !!       print*,'sigma(2)',SEOld1+SEOld2
        !!print*,'SEOld1',SEOld1
        !!print*,'SEOld2',SEOld2
+         S2ph = SEOld1
+         S2hp = SEOld2
 
 !derivatives
         SEOld1AA = 0.0d0
@@ -263,6 +266,8 @@ SUBROUTINE EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        if(abs(EPole-EPoleOld).lt.0.0001.or.iter.eq.15) then
        D2 = E
        print*,'Koopmans =',eps(pole)
+       print*,'S2ph (Ha)',S2ph 
+       print*,'S2hp (Ha)',S2hp
        print*,'D2 (Ha) =',E
        print*,'D2 (eV) =',E*27.2114
        print*,'PS =',PS
