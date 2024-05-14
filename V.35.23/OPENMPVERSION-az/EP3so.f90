@@ -406,7 +406,12 @@ enddo
        B6=0.0d0 
        !Closed-shell, diagonal approx p=q
 
-!B1     
+!B1    
+
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:B1)
+ 
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -421,8 +426,16 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
         B1=(0.5d0)*B1
+        !$OMP BARRIER
+        !$OMP END PARALLEL
 !B2
+
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:B2)
+ 
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -437,8 +450,16 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
         B2=(-0.5d0)*B2
+
+        !$OMP BARRIER
+        !$OMP END PARALLEL
 !B3
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:B3)
+
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -454,8 +475,18 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
         B3=(0.5d0)*B3
+        ! Add a barrier to synchronize threads before ending the parallel region
+        !$OMP BARRIER
+
+        ! End the parallel region
+        !$OMP END PARALLEL
 !B4
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:B4)
+
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -471,8 +502,16 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
         B4=(-0.5d0)*B4
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL
 !B5
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:B5)
+
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -487,8 +526,16 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
         B5=(0.5d0)*B5
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL
 !B6 
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:B6)
+
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -503,7 +550,11 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
         B6=(-0.5d0)*B6
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL
 
         !factors 
         !B1=(0.5d0)*B1
@@ -551,6 +602,9 @@ enddo
 
 !AZ 
 !A1 :: has <VV||VV> term
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,a,b,c,d) REDUCTION(+:A1)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do a=(NeUp*2)+1,Nb*2
             do b=(NeUp*2)+1,Nb*2
@@ -566,7 +620,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A2
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A2)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -582,7 +643,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A3
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A3)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -598,7 +666,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A4
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A4)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -614,7 +689,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A5
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A5)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -630,7 +712,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A6
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A6)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -646,7 +735,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A7
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A7)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -662,7 +758,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A8
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A8)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -678,7 +781,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A9
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A9)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -694,7 +804,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A10
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A10)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -710,7 +827,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A11
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A11)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -726,7 +850,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A12 :: has <OO||OO> term
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,l,a) REDUCTION(+:A12)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -742,7 +873,11 @@ enddo
             enddo
           enddo
         enddo
-       
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL  
+      
         !factors
         A1=(0.25d0)*A1
         A2=(-1.0d0)*A2
@@ -801,6 +936,10 @@ enddo
        dA12=0.0d0
 !AZ fix deriv terms u'v+uv'
 !derivA1 :: derivs with 2 EPoleOld have factor (-1)*(-1)=1
+
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,a,b,c,d) REDUCTION(+:dA1)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do a=(NeUp*2)+1,Nb*2
             do b=(NeUp*2)+1,Nb*2
@@ -816,8 +955,18 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+
         !A1=(-1.0d0)*A1 
         !A1=(-0.25d0)*A1 !0.25
+
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL
+
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,a,b,c,d) REDUCTION(+:dA1)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do a=(NeUp*2)+1,Nb*2
             do b=(NeUp*2)+1,Nb*2
@@ -833,11 +982,21 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+
         !factor 
        ! A1=(-0.25d0)*A1 !0.25
         !deriv factor 
         !A1=(-1.0d0)*A1 !change sign? AZ 2/22
+
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL
+
 !derivA2 (-1)*(-1)
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA2)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -853,7 +1012,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !A2=(-1.0d0)*A2
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA2)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -869,11 +1035,18 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A2=(-1.0d0)*A2 !-1 
         !deriv factor
         !A2=(-1.0d0)*A2 !change sign? AZ 2/22
 !derivA3 :: one E in deriv, (-1) factor 
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA3)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -889,11 +1062,18 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A3=(-1.0d0)*A3 !-1
         !deriv factor
         !A3=(1.0d0)*A3 !change sign? AZ 2/22
 !derivA4 :: (-1)
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA4)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -909,11 +1089,18 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A4=(0.25d0)*A4 !0.25
         !deriv factor
         !A4=(-1.0d0)*A4 
 !derivA5 :: (-1)
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA5)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -929,11 +1116,18 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A5=(-1.0d0)*A5 !-1
         !deriv factor
         !A5=(-1.0d0)*A5
 !derivA6 :: (-1)
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA6)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -949,11 +1143,18 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A6=(0.25d0)*A6 !0.25
         !deriv factor 
         !A6=(-1.0d0)*A6
 !derivA7 :: (+1) since -EPole 
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA7)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -969,11 +1170,18 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A7=(-0.25d0)*A7 !-0.25
         !deriv factor
         !A7=(1.0d0)*A7 
 !derivA8 :: (+1) since -EPole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA8)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -989,11 +1197,18 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A8=(1.0d0)*A8  !1
         !deriv factor 
         !A8=(1.0d0)*A8
 !derivA9 :: (+1) since -Epole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA9)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -1009,11 +1224,19 @@ enddo
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A9=(-0.25d0)*A9 !-0.25
         !deriv factor
         !A9=(1.0d0)*A9 
 !derivA10 :: (+1) since -EPole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA10)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -1029,11 +1252,19 @@ enddo
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A10=(1.0d0)*A10 !1
         !deriv factor
         !A10=(1.0d0)*A10
 !derivA11 :: (+1)*(+1)=(+1) since -Epole and -Epole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA11)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -1049,7 +1280,14 @@ enddo
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !A11=(1.0d0)*A11 
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA11)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -1065,11 +1303,19 @@ enddo
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A11=(1.0d0)*A11 !1
         !deriv factor
         !A11=(1.0d0)*A11
 !derivA12 ::  (+1)*(+1)=(+1) since -Epole and -Epole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,l,a) REDUCTION(+:dA12)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -1085,7 +1331,15 @@ enddo
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !A12=(1.0d0)*A12
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,l,a) REDUCTION(+:dA12)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -1101,6 +1355,11 @@ enddo
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A12=(-0.25d0)*A12 !-0.25
         !deriv factor
