@@ -2,6 +2,9 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
       ! 
       !
 
+!
+      USE omp_lib
+!
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: NB,Ne,MULTIPLICITY
@@ -28,6 +31,7 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
                           EMP2,EMP2AA,EMP2AB,EMP2BA,EMP2BB,EPole,EPoleOld,E,PS,&
                           X1,X2
       DOUBLE PRECISION :: D2, D3,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,&
+                          dA1,dA2,dA3,dA4,dA5,dA6,dA7,dA8,dA9,dA10,dA11,dA12,&
                           B1,B2,B3,B4,B5,B6,Aterms,Bterms,&
                           secondOrder,thirdOrder,&
                           secondOrderDeriv,thirdOrderDeriv,deriv
@@ -65,90 +69,106 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
         print*,' '
         print*,' '
         print*,' '
+!AZ
+      !$OMP PARALLEL SHARED(nb,MOInts,Cup,tempInts1,tempInts2,tempInts3) &
+      !$OMP & PRIVATE(i,j,k,l,mu,nu,lam,sig)
+!
+      Write(*,*) 'Hello'
+      Write(*,*) omp_get_num_threads()
+!
+
+!AZ
 
 !MO ints
-!!      print*,'   AA   '        
-      tempInts1=0.0d0 
-      tempInts2=0.0d0
-      tempInts3=0.0d0
-      moInts = 0.0d0
-      do i=1, nb
-        do mu=1, nb
-          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
-          (Cup(mu,i)*Ints(mu,:,:,:))
-        enddo 
-        do j=1, nb
-          do nu=1, nb
-            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
-            (Cup(nu,j)*tempInts1(i,nu,:,:))
-           enddo
-          do k=1, nb
-            do lam=1, nb
-              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
-              (Cup(lam,k)*tempInts2(i,j,lam,:))
-            enddo
-            do l=1, nb
-              do sig=1, nb
-                MOInts(i,j,k,l) = MOInts(i,j,k,l) + &
-                (Cup(sig,l)*tempInts3(i,j,k,sig))
-              enddo      
-            enddo!end i            
-          enddo!end j     
-        enddo!end k         
-      enddo!end l   
+!$OMP DO
+do i=1, nb
+  do mu=1, nb
+    tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+    (Cup(mu,i)*Ints(mu,:,:,:))
+  enddo
+enddo
+!$OMP END DO
 
-      !spin integration 
-      do i=1,(nb*2) 
-        do j=1,(nb*2) 
-          do k=1,(nb*2) 
-            do l=1,(nb*2) 
-              if( (mod(l,2).eq.mod(j,2)).and.(mod(i,2).eq.mod(k,2)) ) then
-!              X1 = MOInts(int((i+1)/2),int((k+1)/2),int((j+1)/2),int((l+1)/2))
-              else
-!              X1 = 0.0d0
-              endif
-              if( (mod(i,2).eq.mod(l,2)).and.(mod(j,2).eq.mod(k,2)) ) then
-!              X2 = MOInts(int((i+1)/2),int((l+1)/2),int((j+1)/2),int((k+1)/2))
-              else
-!              X2 = 0.0d0
-              endif
-!              tei(i,k,j,l) = X1-X2 !ijkl - ijlk
-            enddo
-          enddo 
+! Add a barrier here to synchronize threads before continuing
+!$OMP BARRIER
+
+!$OMP DO
+do i=1, nb
+  do j=1, nb
+    do nu=1, nb
+      tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+      (Cup(nu,j)*tempInts1(i,nu,:,:))
+    enddo
+  enddo
+enddo
+!$OMP END DO
+
+! Add another barrier here
+!$OMP BARRIER
+
+!$OMP DO
+do i=1, nb
+  do j=1, nb
+    do k=1, nb
+      do lam=1, nb
+        tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+        (Cup(lam,k)*tempInts2(i,j,lam,:))
+      enddo
+      do l=1, nb
+        do sig=1, nb
+          MOInts(i,j,k,l) = MOInts(i,j,k,l) + &
+          (Cup(sig,l)*tempInts3(i,j,k,sig))
         enddo
-     enddo 
+      enddo!end i            
+    enddo!end j     
+  enddo!end k         
+enddo!end l   
+
+!$OMP END DO
+!$OMP END PARALLEL
 
 !spin-basis double bar integrals <12||12>
 
 !11/17 this seems to work
 
-      do s=1, nB*2
-        do r=1, nB*2
-          do q=1, nB*2
-            do p=1, nB*2
-              !(pq|rs)
-              tei(p,q,r,s) = & !int-->floor division
-            ( MOInts(int((p+1)/2),int((r+1)/2),&
-              int((q+1)/2),int((s+1)/2))*&
-              (kronecker(mod((p),2),mod((r),2)))*& !p r
-              (kronecker(mod((q),2),mod((s),2))) ) -& ! q s 
-              !(pq|sr)
-            ( MOInts(int((p+1)/2),int((s+1)/2),&
-              int((q+1)/2),int((r+1)/2))*&
-              (kronecker(mod((p),2),mod((s),2)))*& ! p s
-              (kronecker(mod((q),2),mod((r),2))) )! q r 
+!$OMP PARALLEL SHARED(nb,MOInts,tei) &
+!$OMP & PRIVATE(p,q,r,s)
 
-                !Test Print
-                !print*,'pqrs',p,q,r,s
-                !print*,' (kronecker(mod((p),2),mod((r),2)))',&
-                !         (kronecker(mod((p),2),mod((r),2)))
-                !print*,' (kronecker(mod((q),2),mod((s),2)))',&
-                !         (kronecker(mod((q),2),mod((s),2)))
+!$OMP DO
+do s=1, nB*2
+  do r=1, nB*2
+    do q=1, nB*2
+      do p=1, nB*2
+        !(pq|rs)
+        tei(p,q,r,s) = & !int-->floor division
+        ( MOInts(int((p+1)/2),int((r+1)/2),&
+          int((q+1)/2),int((s+1)/2))*&
+          (kronecker(mod((p),2),mod((r),2)))*& !p r
+          (kronecker(mod((q),2),mod((s),2))) ) -& ! q s 
+        !(pq|sr)
+        ( MOInts(int((p+1)/2),int((s+1)/2),&
+          int((q+1)/2),int((r+1)/2))*&
+          (kronecker(mod((p),2),mod((s),2)))*& ! p s
+          (kronecker(mod((q),2),mod((r),2))) )! q r 
 
-            enddo
-          enddo
-        enddo
+        !Test Print
+        !print*,'pqrs',p,q,r,s
+        !print*,' (kronecker(mod((p),2),mod((r),2)))',&
+        !         (kronecker(mod((p),2),mod((r),2)))
+        !print*,' (kronecker(mod((q),2),mod((s),2)))',&
+        !         (kronecker(mod((q),2),mod((s),2)))
+
       enddo
+    enddo
+  enddo
+enddo
+!$OMP END DO
+
+! Add a barrier to synchronize threads before ending the parallel region
+!$OMP BARRIER
+
+! End the parallel region
+!$OMP END PARALLEL
 
      print*,'   Tran.Done.   '        
 
@@ -162,7 +182,8 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
      deallocate(tempInts1,tempInts2,tempInts3)
 
         !AZ if tiled by spin, 2*poleIndex
-        do pole=1,(neup*2)+1,2 !!!!! begin pole search
+        !AZ 5/15 to print LUMO, neup*2 + 1
+        do pole=1,(neup*2)+5,2 !!!!! begin pole search
 
         iter=0 !max iter 15 for now
 
@@ -385,113 +406,9 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
        B5=0.0d0
        B6=0.0d0 
        !Closed-shell, diagonal approx p=q
-!B1     
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B1 = B1 + ( & 
-                        (tei(pole,b,pole,i)*tei(i,j,a,c)*tei(a,c,b,j))/& 
-                        ((eps(i)-eps(b))*(eps(i)+ eps(j) -eps(a)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B1=(0.5d0)*B1
-!B2
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B2 = B2 + ( & 
-                        (tei(pole,a,pole,j)*tei(i,k,a,b)*tei(j,b,i,k))/& 
-                        ((eps(j)-eps(a))*(eps(i)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B2=(-0.5d0)*B2
-!B3
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B3 = B3 + ( & 
-                        (tei(pole,a,pole,b)*tei(i,j,a,c)*tei(b,c,i,j))/& 
-                        ((eps(i)+eps(j)-eps(a)-eps(c))*&
-                        (eps(i)+eps(j)-eps(b)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B3=(0.5d0)*B3
-!B4
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B4 = B4 + ( & 
-                        (tei(pole,j,pole,i)*tei(i,k,a,b)*tei(a,b,j,k))/& 
-                        ((eps(j)+eps(k)-eps(a)-eps(b))*&
-                        (eps(i)+eps(k)-eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B4=(-0.5d0)*B4
 
-!B5
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do a=(NeUp*2)+1,Nb*2
-              do b=(NeUp*2)+1,Nb*2
-                do c=(NeUp*2)+1,Nb*2
-                   B5 = B5 + ( & 
-                        (tei(pole,i,pole,a)*tei(b,c,i,j)*tei(a,j,b,c))/& 
-                        ((eps(i)-eps(a))*(eps(i)+ eps(j) -eps(b)-eps(c)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B5=(0.5d0)*B5
-
-!B6 
-        do i=1,NeUp*2 !remember spin has tiled indices
-          do j=1,NeUp*2
-            do k=1,NeUp*2
-              do a=(NeUp*2)+1,Nb*2
-                do b=(NeUp*2)+1,Nb*2
-                   B6 = B6 + ( & 
-                        (tei(pole,i,pole,a)*tei(a,b,j,k)*tei(j,k,i,b))/& 
-                        ((eps(i)-eps(a))*(eps(j)+ eps(k) -eps(a)-eps(b)))&
-                             )
-                enddo 
-              enddo 
-            enddo
-          enddo
-        enddo
-        !factor 
-        B6=(-0.5d0)*B6
-
+       !no B terms
+ 
        !no B term derivatives
 
        !Total of B terms
@@ -516,7 +433,14 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
        A10=0.0d0
        A11=0.0d0
        A12=0.0d0
+!AZ
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.ge.((neup*2)+1)) then !VEA R2ph 
 !A1 :: has <VV||VV> term
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,a,b,c,d) REDUCTION(+:A1)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do a=(NeUp*2)+1,Nb*2
             do b=(NeUp*2)+1,Nb*2
@@ -532,10 +456,15 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A1=(0.25d0)*A1
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 
 !A2
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A2)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -551,9 +480,20 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A2=(-1.0d0)*A2
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
+ 
+        endif !VEA R2ph
+
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.ge.((neup*2)+1)) then !VEA P2ph 
 !A3
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A3)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -569,9 +509,14 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A3=(-1.0d0)*A3
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A4
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A4)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -587,9 +532,14 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A4=(0.25d0)*A4
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A5
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A5)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -605,9 +555,14 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A5=(-1.0d0)*A5
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A6
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A6)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -623,9 +578,20 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A6=(0.25d0)*A6
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
+
+        endif !VEA P2ph 
+
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.lt.((neup*2)+1)) then !VIP P2hp 
 !A7
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A7)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -641,9 +607,14 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A7=(-0.25d0)*A7
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A8
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A8)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -659,10 +630,14 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A8=(1.0d0)*A8
+        !$OMP END DO
+        !$OMP BARRIER
 
+        !$OMP END PARALLEL 
 !A9
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:A9)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
@@ -678,10 +653,14 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A9=(-0.25d0)*A9
+        !$OMP END DO
+        !$OMP BARRIER
 
+        !$OMP END PARALLEL 
 !A10
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A10)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -697,10 +676,20 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A10=(1.0d0)*A10
+        !$OMP END DO
+        !$OMP BARRIER
 
+        !$OMP END PARALLEL 
+        endif !VIP P2hp 
+       
+
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.lt.((neup*2)+1)) then !VIP R2hp 
 !A11
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:A11)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -716,9 +705,14 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
-        A11=(1.0d0)*A11
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL 
 !A12 :: has <OO||OO> term
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EPoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,l,a) REDUCTION(+:A12)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
@@ -734,8 +728,44 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
-        !factor 
+        !$OMP END DO
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL  
+        endif !VIP R2hp 
+
+        !factors
+        A1=(0.25d0)*A1
+        A2=(-1.0d0)*A2
+        A3=(-1.0d0)*A3
+        A4=(0.25d0)*A4
+        A5=(-1.0d0)*A5
+        A6=(0.25d0)*A6
+        A7=(-0.25d0)*A7
+        A8=(1.0d0)*A8
+        A9=(-0.25d0)*A9        
+        A10=(1.0d0)*A10
+        A11=(1.0d0)*A11
         A12=(-0.25d0)*A12
+
+!AZ
+       if(pole.eq.1) then
+       print*,''
+       print*,'A1',A1
+       print*,'A2',A2
+       print*,'A3',A3
+       print*,'A4',A4
+       print*,'A5',A5
+       print*,'A6',A6
+       print*,'A7',A7
+       print*,'A8',A8
+       print*,'A9',A9
+       print*,'A10',A10
+       print*,'A11',A11
+       print*,'A12',A12
+       print*,''
+       endif 
+!AZ
 
        !L3 terms
        !R2hp: A1, A2
@@ -746,9 +776,17 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
        !Cd: B3, B4
 
        !Total of A terms 
-       Aterms=((A11+A12))
-       Aterms=Aterms + (0.5*(A7+A8+A9+A10))  
-      
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.lt.((neup*2)+1)) then !VIPs 2hp
+         Aterms=((A11+A12))
+         Aterms=Aterms + (0.5*(A7+A8+A9+A10))  
+       endif 
+       if(pole.ge.((neup*2)+1)) then !VEAs 2ph  
+         Aterms=((A1+A2))
+         Aterms=Aterms + (0.5*(A3+A4+A5+A6))
+       endif 
+
        !Total of 3rd order terms
        thirdOrder=Aterms!+Bterms
        !New pole: epsHF + Sigma(2) + Sigma(3)
@@ -757,26 +795,33 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
        !A term derivatives
        !like 2nd order, use the 3rd order A term vars for deriv vars
        !square denoms with E
-       A1=0.0d0
-       A2=0.0d0
-       A3=0.0d0
-       A4=0.0d0
-       A5=0.0d0
-       A6=0.0d0
-       A7=0.0d0
-       A8=0.0d0
-       A9=0.0d0
-       A10=0.0d0
-       A11=0.0d0
-       A12=0.0d0
+       dA1=0.0d0
+       dA2=0.0d0
+       dA3=0.0d0
+       dA4=0.0d0
+       dA5=0.0d0
+       dA6=0.0d0
+       dA7=0.0d0
+       dA8=0.0d0
+       dA9=0.0d0
+       dA10=0.0d0
+       dA11=0.0d0
+       dA12=0.0d0
 !AZ fix deriv terms u'v+uv'
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.ge.((neup*2)+1)) then !VEA R2ph 
 !derivA1 :: derivs with 2 EPoleOld have factor (-1)*(-1)=1
+
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,a,b,c,d) REDUCTION(+:dA1)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do a=(NeUp*2)+1,Nb*2
             do b=(NeUp*2)+1,Nb*2
               do c=(NeUp*2)+1,Nb*2
                 do d=(NeUp*2)+1,Nb*2
-                   A1 = A1 + (-0.25d0)*( & 
+                   dA1 = dA1 + (-0.25d0)*( & 
                         (tei(pole,i,a,c)*tei(a,c,b,d)*tei(b,d,pole,i))/& 
                         (((EPoleOld+eps(i)-eps(a)-eps(c)))*&
                         ((EPoleOld+ eps(i) -eps(b)-eps(d))**2))&
@@ -786,14 +831,24 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+
         !A1=(-1.0d0)*A1 
         !A1=(-0.25d0)*A1 !0.25
+
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL
+
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,a,b,c,d) REDUCTION(+:dA1)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do a=(NeUp*2)+1,Nb*2
             do b=(NeUp*2)+1,Nb*2
               do c=(NeUp*2)+1,Nb*2
                 do d=(NeUp*2)+1,Nb*2
-                   A1 = A1 +  (-0.25d0)*( & 
+                   dA1 = dA1 +  (-0.25d0)*( & 
                         (tei(pole,i,a,c)*tei(a,c,b,d)*tei(b,d,pole,i))/& 
                         (((EPoleOld+eps(i)-eps(a)-eps(c))**2)*&
                         ((EPoleOld+ eps(i) -eps(b)-eps(d))))&
@@ -803,17 +858,27 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+
         !factor 
        ! A1=(-0.25d0)*A1 !0.25
         !deriv factor 
         !A1=(-1.0d0)*A1 !change sign? AZ 2/22
+
+        !$OMP BARRIER
+
+        !$OMP END PARALLEL
+
 !derivA2 (-1)*(-1)
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA2)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
               do b=(NeUp*2)+1,Nb*2
                 do c=(NeUp*2)+1,Nb*2
-                   A2 = A2 +  (1.0d0)*( & 
+                   dA2 = dA2 +  (1.0d0)*( & 
                         (tei(pole,i,a,c)*tei(a,j,b,i)*tei(b,c,pole,j))/& 
                         (((EPoleOld+eps(i)-eps(a)-eps(c)))*&
                         ((EPoleOld+ eps(j) -eps(b)-eps(c))**2))&
@@ -823,13 +888,20 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !A2=(-1.0d0)*A2
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA2)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
               do b=(NeUp*2)+1,Nb*2
                 do c=(NeUp*2)+1,Nb*2
-                   A2 = A2 + (1.0d0)*( & 
+                   dA2 = dA2 + (1.0d0)*( & 
                         (tei(pole,i,a,c)*tei(a,j,b,i)*tei(b,c,pole,j))/& 
                         (((EPoleOld+eps(i)-eps(a)-eps(c))**2)*&
                         ((EPoleOld+ eps(j) -eps(b)-eps(c))))&
@@ -839,17 +911,30 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A2=(-1.0d0)*A2 !-1 
         !deriv factor
         !A2=(-1.0d0)*A2 !change sign? AZ 2/22
+
+        endif !VEA R2ph 
+
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.ge.((neup*2)+1)) then !VEA P2ph 
 !derivA3 :: one E in deriv, (-1) factor 
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA3)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
               do b=(NeUp*2)+1,Nb*2
                 do c=(NeUp*2)+1,Nb*2
-                   A3 = A3 + (1.0d0)*( & 
+                   dA3 = dA3 + (1.0d0)*( & 
                         (tei(pole,b,i,c)*tei(i,j,a,b)*tei(a,c,pole,j))/& 
                         (((EPoleOld+eps(j)-eps(a)-eps(c))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(b)))&
@@ -859,17 +944,24 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A3=(-1.0d0)*A3 !-1
         !deriv factor
         !A3=(1.0d0)*A3 !change sign? AZ 2/22
 !derivA4 :: (-1)
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA4)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
               do a=(NeUp*2)+1,Nb*2
                 do b=(NeUp*2)+1,Nb*2
-                   A4 = A4 + (-0.25d0)*( & 
+                   dA4 = dA4 + (-0.25d0)*( & 
                         (tei(pole,k,i,j)*tei(i,j,a,b)*tei(a,b,pole,k))/& 
                         (((EPoleOld+eps(k)-eps(a)-eps(b))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(b)))&
@@ -879,17 +971,24 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A4=(0.25d0)*A4 !0.25
         !deriv factor
         !A4=(-1.0d0)*A4 
 !derivA5 :: (-1)
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA5)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
               do b=(NeUp*2)+1,Nb*2
                 do c=(NeUp*2)+1,Nb*2
-                   A5 = A5 + (1.0d0)*( & 
+                   dA5 = dA5 + (1.0d0)*( & 
                         (tei(pole,j,a,b)*tei(a,c,i,j)*tei(i,b,pole,c))/& 
                         (((EPoleOld+eps(j)-eps(a)-eps(b))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(c)))&
@@ -899,17 +998,24 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A5=(-1.0d0)*A5 !-1
         !deriv factor
         !A5=(-1.0d0)*A5
 !derivA6 :: (-1)
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA6)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
               do a=(NeUp*2)+1,Nb*2
                 do b=(NeUp*2)+1,Nb*2
-                   A6 = A6 + (-0.25d0)*( & 
+                   dA6 = dA6 + (-0.25d0)*( & 
                         (tei(pole,j,a,b)*tei(a,b,i,k)*tei(i,k,pole,j))/& 
                         (((EPoleOld+eps(j)-eps(a)-eps(b))**2)*&
                         (eps(i)+ eps(k) -eps(a)-eps(b)))&
@@ -919,17 +1025,30 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A6=(0.25d0)*A6 !0.25
         !deriv factor 
         !A6=(-1.0d0)*A6
+        endif !VEA P2ph 
+
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.lt.((neup*2)+1)) then !VIP P2hp 
+
 !derivA7 :: (+1) since -EPole 
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA7)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
               do b=(NeUp*2)+1,Nb*2
                 do c=(NeUp*2)+1,Nb*2
-                   A7 = A7 + (-0.25d0)*( & 
+                   dA7 = dA7 + (-0.25d0)*( & 
                         (tei(pole,c,i,j)*tei(i,j,a,b)*tei(a,b,pole,c))/& 
                         (((eps(i)+eps(j)-EPoleOld-eps(c))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(b)))&
@@ -939,17 +1058,24 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A7=(-0.25d0)*A7 !-0.25
         !deriv factor
         !A7=(1.0d0)*A7 
 !derivA8 :: (+1) since -EPole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA8)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
               do a=(NeUp*2)+1,Nb*2
                 do b=(NeUp*2)+1,Nb*2
-                   A8 = A8 + (1.0d0)*( & 
+                   dA8 = dA8 + (1.0d0)*( & 
                         (tei(pole,b,i,k)*tei(i,j,a,b)*tei(a,k,pole,j))/& 
                         (((eps(i)+eps(k)-EPoleOld-eps(b))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(b)))&
@@ -959,17 +1085,24 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A8=(1.0d0)*A8  !1
         !deriv factor 
         !A8=(1.0d0)*A8
 !derivA9 :: (+1) since -Epole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,a,b,c) REDUCTION(+:dA9)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do a=(NeUp*2)+1,Nb*2
               do b=(NeUp*2)+1,Nb*2
                 do c=(NeUp*2)+1,Nb*2
-                   A9 = A9 + (-0.25d0)*( & 
+                   dA9 = dA9 + (-0.25d0)*( & 
                         (tei(pole,b,a,c)*tei(a,c,i,j)*tei(i,j,pole,b))/& 
                         (((eps(i)+eps(j)-EPoleOld-eps(b))**2)*&
                         (eps(i)+ eps(j) -eps(a)-eps(c)))&
@@ -979,17 +1112,25 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A9=(-0.25d0)*A9 !-0.25
         !deriv factor
         !A9=(1.0d0)*A9 
 !derivA10 :: (+1) since -EPole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA10)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
               do a=(NeUp*2)+1,Nb*2
                 do b=(NeUp*2)+1,Nb*2
-                   A10 = A10 + (1.0d0)*( & 
+                   dA10 = dA10 + (1.0d0)*( & 
                         (tei(pole,k,a,j)*tei(a,b,i,k)*tei(i,j,pole,b))/& 
                         (((eps(i)+eps(j)-EPoleOld-eps(b))**2)*&
                         (eps(i)+ eps(k) -eps(a)-eps(b)))&
@@ -999,17 +1140,30 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A10=(1.0d0)*A10 !1
         !deriv factor
         !A10=(1.0d0)*A10
+        endif !VIP P2hp 
+
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.lt.((neup*2)+1)) then !VIP R2hp 
 !derivA11 :: (+1)*(+1)=(+1) since -Epole and -Epole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA11)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
               do a=(NeUp*2)+1,Nb*2
                 do b=(NeUp*2)+1,Nb*2
-                   A11 = A11 + (1.0d0)*( & 
+                   dA11 = dA11 + (1.0d0)*( & 
                         (tei(pole,b,i,k)*tei(i,a,j,b)*tei(j,k,pole,a))/& 
                         (((eps(j)+eps(k)-EPoleOld-eps(a))**2)*&
                         (eps(i)+ eps(k) -EPoleOld-eps(b)))&
@@ -1019,13 +1173,20 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !A11=(1.0d0)*A11 
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,a,b) REDUCTION(+:dA11)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
               do a=(NeUp*2)+1,Nb*2
                 do b=(NeUp*2)+1,Nb*2
-                   A11 = A11 + (1.0d0)*( & 
+                   dA11 = dA11 + (1.0d0)*( & 
                         (tei(pole,b,i,k)*tei(i,a,j,b)*tei(j,k,pole,a))/& 
                         ((eps(j)+eps(k)-EPoleOld-eps(a))*&
                         ((eps(i)+ eps(k) -EPoleOld-eps(b))**2))&
@@ -1035,17 +1196,25 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A11=(1.0d0)*A11 !1
         !deriv factor
         !A11=(1.0d0)*A11
 !derivA12 ::  (+1)*(+1)=(+1) since -Epole and -Epole
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,l,a) REDUCTION(+:dA12)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
               do l=1,NeUp*2
                 do a=(NeUp*2)+1,Nb*2
-                   A12 = A12 + (-0.25d0)*( & 
+                   dA12 = dA12 + (-0.25d0)*( & 
                         (tei(pole,a,i,l)*tei(i,l,j,k)*tei(j,k,pole,a))/& 
                         (((eps(j)+eps(k)-EPoleOld-eps(a))**2)*&
                         (eps(i)+ eps(l) -EPoleOld-eps(a)))&
@@ -1055,13 +1224,21 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !A12=(1.0d0)*A12
+        !$OMP PARALLEL SHARED(nb,neup,tei,eps,EpoleOld,pole) &
+        !$OMP PRIVATE(i,j,k,l,a) REDUCTION(+:dA12)
+        !$OMP DO 
         do i=1,NeUp*2 !remember spin has tiled indices
           do j=1,NeUp*2
             do k=1,NeUp*2
               do l=1,NeUp*2
                 do a=(NeUp*2)+1,Nb*2
-                   A12 = A12 + (-0.25d0)*( & 
+                   dA12 = dA12 + (-0.25d0)*( & 
                         (tei(pole,a,i,l)*tei(i,l,j,k)*tei(j,k,pole,a))/& 
                         ((eps(j)+eps(k)-EPoleOld-eps(a))*&
                         ((eps(i)+ eps(l) -EPoleOld-eps(a))**2))&
@@ -1071,17 +1248,33 @@ SUBROUTINE EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,n
             enddo
           enddo
         enddo
+
+        !$OMP END DO 
+        !$OMP BARRIER
+        !$OMP END PARALLEL
+
         !factor 
         !A12=(-0.25d0)*A12 !-0.25
         !deriv factor
         !A12=(1.0d0)*A12 !change sign?
+        endif  !VIP R2hp 
+
 !AZ 2/21 
 !now sum derivs, check the terms with 2 pole variables, check ()'s
 !add 2nd order derivs as well, put into Newton and PS formula 
 
        !save 3rd order derivs
-       thirdOrderDeriv=0.5*(A7+A8+A9+A10)
-       thirdOrderDeriv=thirdOrderDeriv+((A11+A12))
+       !AZ 
+       !VIPs 2hp VEAs 2ph 
+       if(pole.lt.((neup*2)+1)) then !VIPs 2hp
+         thirdOrderDeriv=0.5*(dA7+dA8+dA9+dA10)
+         thirdOrderDeriv=thirdOrderDeriv+((dA11+dA12))
+       endif 
+       if(pole.ge.((neup*2)+1)) then !VEAs 2ph  
+         thirdOrderDeriv=0.5*(dA3+dA4+dA5+dA6)
+         thirdOrderDeriv=thirdOrderDeriv+((dA1+dA2))
+       endif
+
        !Compute new pole NR step 
        deriv = secondOrderDeriv+thirdOrderDeriv
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(deriv))))
