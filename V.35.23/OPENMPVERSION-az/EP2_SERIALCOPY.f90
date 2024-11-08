@@ -1,9 +1,8 @@
 SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce,SPINCONSERVE)
       ! 
       !
-!
-      use omp_lib 
-!
+
+
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: NB,Ne,MULTIPLICITY
       DOUBLE PRECISION, INTENT(IN) :: Cup(NB,NB),Cdown(NB,NB),Ints(NB,NB,NB,NB)
@@ -77,69 +76,128 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         print*,' '
         print*,' '
         print*,' '
-!11/7/24 closed shell AO2MO for now, set aa = all for now
-!AZ
-      !$OMP PARALLEL SHARED(nb,MOIntsAA,Cup,tempInts1,tempInts2,tempInts3) &
-      !$OMP & PRIVATE(i,j,k,l,mu,nu,lam,sig)
-!
-      Write(*,*) 'Hello'
-      Write(*,*) omp_get_num_threads()
-!
 
-!AZ
-
-!MO ints
-!$OMP DO
-do i=1, nb
-  do mu=1, nb
-    tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
-    (Cup(mu,i)*Ints(mu,:,:,:))
-  enddo
-enddo
-!$OMP END DO
-
-! Add a barrier here to synchronize threads before continuing
-!$OMP BARRIER
-
-!$OMP DO
-do i=1, nb
-  do j=1, nb
-    do nu=1, nb
-      tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
-      (Cup(nu,j)*tempInts1(i,nu,:,:))
-    enddo
-  enddo
-enddo
-!$OMP END DO
-
-! Add another barrier here
-!$OMP BARRIER
-
-!$OMP DO
-do i=1, nb
-  do j=1, nb
-    do k=1, nb
-      do lam=1, nb
-        tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
-        (Cup(lam,k)*tempInts2(i,j,lam,:))
-      enddo
-      do l=1, nb
-        do sig=1, nb
-          MOIntsAA(i,j,k,l) = MOIntsAA(i,j,k,l) + &
-          (Cup(sig,l)*tempInts3(i,j,k,sig))
-        enddo
-      enddo!end i            
-    enddo!end j     
-  enddo!end k         
-enddo!end l   
-
-!$OMP END DO
-!$OMP END PARALLEL
-
-
-      MOIntsBB = MOIntsAA
-      MOIntsAB = MOIntsAA
-      MOIntsBA = MOIntsAA
+!AA
+        print*,'   AA   '        
+      tempInts1=0.0d0 
+      tempInts2=0.0d0
+      tempInts3=0.0d0
+      moIntsAA = 0.0d0
+      do i=1, nb
+        do mu=1, nb
+          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+          (Cup(mu,i)*Ints(mu,:,:,:))
+        enddo 
+        do j=1, nb
+          do nu=1, nb
+            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+            (Cup(nu,j)*tempInts1(i,nu,:,:))
+           enddo
+          do k=1, nb
+            do lam=1, nb
+              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+              (Cup(lam,k)*tempInts2(i,j,lam,:))
+            enddo
+            do l=1, nb
+              do sig=1, nb
+                MOIntsAA(i,j,k,l) = MOIntsAA(i,j,k,l) + &
+                (Cup(sig,l)*tempInts3(i,j,k,sig))
+              enddo      
+            enddo!end i            
+          enddo!end j     
+        enddo!end k         
+      enddo!end l   
+ !AB
+        print*,'   AB   '        
+      tempInts1=0.0d0 
+      tempInts2=0.0d0
+      tempInts3=0.0d0
+      moIntsAB = 0.0d0
+      do i=1, nb
+        do mu=1, nb
+          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+          (Cup(mu,i)*Ints(mu,:,:,:))
+        enddo 
+        do j=1, nb
+          do nu=1, nb
+            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+            (Cdown(nu,j)*tempInts1(i,nu,:,:))
+           enddo
+          do k=1, nb
+            do lam=1, nb
+              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+              (Cup(lam,k)*tempInts2(i,j,lam,:))
+            enddo
+            do l=1, nb
+              do sig=1, nb
+                MOIntsAB(i,j,k,l) = MOIntsAB(i,j,k,l) + &
+                (Cdown(sig,l)*tempInts3(i,j,k,sig))
+              enddo      
+            enddo!end i            
+          enddo!end j     
+        enddo!end k         
+      enddo!end l   
+ !BA
+        print*,'   BA   '        
+      tempInts1=0.0d0 
+      tempInts2=0.0d0
+      tempInts3=0.0d0
+      moIntsBA = 0.0d0
+      do i=1, nb
+        do mu=1, nb
+          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+          (Cdown(mu,i)*Ints(mu,:,:,:))
+        enddo 
+        do j=1, nb
+          do nu=1, nb
+            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+            (Cup(nu,j)*tempInts1(i,nu,:,:))
+           enddo
+          do k=1, nb
+            do lam=1, nb
+              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+              (Cdown(lam,k)*tempInts2(i,j,lam,:))
+            enddo
+            do l=1, nb
+              do sig=1, nb
+                MOIntsBA(i,j,k,l) = MOIntsBA(i,j,k,l) + &
+                (Cup(sig,l)*tempInts3(i,j,k,sig))
+              enddo      
+            enddo!end i            
+          enddo!end j     
+        enddo!end k         
+      enddo!end l   
+  !BB
+        print*,'   BB   '        
+      tempInts1=0.0d0 
+      tempInts2=0.0d0
+      tempInts3=0.0d0
+      moIntsBB = 0.0d0
+      do i=1, nb
+        do mu=1, nb
+          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+          (Cdown(mu,i)*Ints(mu,:,:,:))
+        enddo 
+        do j=1, nb
+          do nu=1, nb
+            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+            (Cdown(nu,j)*tempInts1(i,nu,:,:))
+           enddo
+          do k=1, nb
+            do lam=1, nb
+              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+              (Cdown(lam,k)*tempInts2(i,j,lam,:))
+            enddo
+            do l=1, nb
+              do sig=1, nb
+                MOIntsBB(i,j,k,l) = MOIntsBB(i,j,k,l) + &
+                (Cdown(sig,l)*tempInts3(i,j,k,sig))
+              enddo      
+            enddo!end i            
+          enddo!end j     
+        enddo!end k         
+      enddo!end l   
+ 
       print*,'   Tran.Done.   '        
     
       deallocate(tempInts1,tempInts2,tempInts3)
@@ -412,7 +470,7 @@ enddo!end l
             do a = 1, nb-neup
               do b = 1, nb-neup
                 do k = 1, neup 
-                POcc(i, j) = -0.5d0*POcc(i, j) + tijab(k,i,b,a) * tijab(j,k,a,b)
+                POcc(i, j) = -0.5d0*POcc(i, j) + tijab(i,a,k,b) * tijab(j,a,k,b)
                 end do
              end do
            end do
@@ -432,12 +490,12 @@ enddo!end l
          end do
        end do
 
-      write(*,*)"Pocc"
-      write(*,*)
-      call print_mat(POcc,neup) 
-      write(*,*)"PVirt"
-      write(*,*)
-      call print_mat(PVirt,nb-neup) 
+!       write(*,*)"Pocc"
+!       write(*,*)
+!       call print_mat(POcc,neup) 
+!       write(*,*)"PVirt"
+!       write(*,*)
+!       call print_mat(PVirt,nb-neup) 
  
        trPOcc = 0
        do i=1,neup

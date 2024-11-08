@@ -19,7 +19,15 @@ SUBROUTINE EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
                                        moIntsBA(:,:,:,:),&
                                        moIntsBB(:,:,:,:),&
                                        moInts(:,:,:,:),&
-                                       tei(:,:,:,:),eps(:)
+                                       tei(:,:,:,:),eps(:),&
+                                       tijab(:,:,:,:),&!11/6/24
+                                       pocc(:,:),&!11/6/24
+                                       poccA(:,:),&!11/6/24
+                                       poccB(:,:),&!11/6/24
+                                       pvirt(:,:),&!11/6/24
+                                       tempVec(:),&!11/7/24
+                                       tempMat(:,:)!11/7/24
+
       DOUBLE PRECISION, ALLOCATABLE :: tempInts1(:,:,:,:), & 
                                        tempInts2(:,:,:,:), &
                                        tempInts3(:,:,:,:)
@@ -30,6 +38,10 @@ SUBROUTINE EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
                           SEOld1AA,SEOld1AB,SEOld2AA,SEOld2AB,&
                           EMP2,EMP2AA,EMP2AB,EMP2BA,EMP2BB,EPole,EPoleOld,E,PS,&
                           X1,X2
+!AZ 10/3/24
+     DOUBLE PRECISION :: trPOcc,trPVirt                                              
+     DOUBLE PRECISION :: wInts, wIntsAA,wIntsAB,wIntsBB
+!AZ 10/3/24
       INTEGER :: a,b,c,d,r,s,pole,mu,nu,lam,sig,neup,nedown,iter
      
           
@@ -54,6 +66,16 @@ SUBROUTINE EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
 
       allocate(MOInts(nb,nb,nb,nb))
       allocate(tei(nb*2,nb*2,nb*2,nb*2))
+
+!AZ 11/6/24 
+      allocate(tijab(nb*2,nb*2,nb*2,nb*2))
+      allocate(pOcc(neup*2,neup*2))
+      allocate(pOccA(neup,neup))
+      allocate(pOccB(neup,neup))
+      allocate(pVirt(nb*2-neup*2,nb*2-neup*2))
+      allocate(tempVec(nb*2))
+      allocate(tempMat(nb*2,nb*2))
+!AZ 11/6/24 
 
       !Quarter transformations: O(N^5)
         print*,' '
@@ -300,9 +322,160 @@ enddo
 
        enddo !!!!! end pole search
 
+!AZ 10/3/24
 
+       print*,' '
+       print*,' '
+       print*,'==========================================================='
+       print*,'            Results from the MP2 calculation:              '
+       print*,'==========================================================='
+       print*,' '
+
+!
+       emp2=0.0d0
+       emp2aa=0.0d0
+       emp2ab=0.0d0
+       emp2ba=0.0d0
+       emp2bb=0.0d0 
+        do i=1,neup*2
+          do j=1,neup*2
+            do a=(neup*2)+1,nB*2
+              do b=(neup*2)+1,nB*2
+              EMP2AA = EMP2AA +  &
+                (tei(i,j,a,b))**2 / &  
+                ((eps(i) + eps(j)) - &
+                eps(a) - eps(b))
+              !AZ 11/6/24
+                tijab(i,j,a,b) =  &
+                (tei(i,j,a,b)) / &  
+                ((eps(i) + eps(j)) - &
+                eps(a) - eps(b))
+              !AZ 11/6/24
+              enddo 
+            enddo 
+          enddo 
+        enddo 
+
+        print*,' '
+        EMP2AA =  EMP2AA/4.0d0
+!        EMP2AB =  EMP2AB
+!        EMP2BA =  EMP2BA
+!        EMP2BB =  EMP2BB/4.0d0
+        print*,'E2AA (Ha) =',EMP2AA
+!        print*,'E2AB (Ha) =',EMP2AB
+!        print*,'E2BB (Ha) =',EMP2BB
+        
+        EMP2=EMP2AA!+EMP2AB+EMP2BB
+!AZ 11/7
+        !amplitudes are tiled by spin
+        POcc= 0.0d0
+        do i = 1, neup*2
+          do j = 1, neup*2
+            do a = (neup*2)+1,nB*2
+              do b = (neup*2)+1,nB*2
+                do k = 1, neup*2
+!                POcc(i, j) = POcc(i, j) -0.5d0 * tijab(i,k,a,b) * tijab(k,j,b,a)
+                POcc(i, j) = POcc(i, j) -0.5d0 * tijab(k,i,b,a) * tijab(j,k,a,b)
+                end do
+             end do
+           end do
+         end do
+       end do
+ 
+        PVirt = 0.0d0
+!        do a = (neup*2)+1,nB*2
+!          do b = (neup*2)+1,nB*2
+!            do i = 1, neup*2
+!              do j = 1, neup*2
+!                do c = (neup*2)+1,nB*2
+!                PVirt(a, b) = 0.5d0*PVirt(a, b) + tijab(i,j,a,c) * tijab(i,j,b,c)
+!                end do
+!             end do
+!           end do
+!         end do
+!       end do
+
+!!      write(*,*)"Pocc"
+      write(*,*)
+!!      call print_mat(POcc,neup*2) 
+!!      write(*,*)"PVirt"
+!!      write(*,*)
+!!      call print_mat(PVirt,nb*2-neup*2) 
+ 
+!!       trPOcc = 0
+       print*,'alpha diag of POcc'
+       do i=1,neup*2, 2
+!!         trPOcc = trPOcc + pOcc(i,i)
+         print*,pOcc(i,i)   
+       enddo
+!!       trPVirt = 0
+!!       do i=1,nb*2-neup*2
+!!         trPVirt = trPVirt + pVirt(i,i)  
+!!       enddo
+
+
+       write(*,*) 'trPocc meowwwwwwwww', trPOcc 
+!       write(*,*) 'trPVirt meowwwwwwwww', trPVirt
+
+       print*,'take alpha tiles of POcc'
+       do i=1,(neup*2),2
+         do j=1,(neup*2),2
+               pOccA((i+1)/2,(j+1)/2) = pOcc(i,j)
+         enddo 
+       enddo 
+       print*,'alpha diag of POccA'
+       do i=1,neup
+!!         trPOcc = trPOcc + pOcc(i,i)
+         print*,pOccA(i,i)
+       enddo
+       do i=2,neup*2, 2
+         do j=2,neup*2, 2
+           do k=1,neup
+             do l=1,neup
+               pOccB(k,l) = pOcc(i,j)
+             enddo 
+           enddo 
+         enddo 
+       enddo 
+
+
+        tempVec = 0.0
+        tempMat = 0.0
+        call diagh(POccA,neup,tempVec,tempMat)
+        print*,'NOONs of Pocc MP2'
+        do i=1,neup
+          write(*, '(F12.9)')tempVec(i)
+        enddo  
+        print*,'sum of NO occs'
+        write(*, '(F12.9)')sum(tempVec)
+!        tempVec = 0.0
+!        tempMat = 0.0 
+!        call diagh(PVirt,nb*2-neup*2,tempVec,tempMat)
+!        print*,'NOONs of PVirt MP2'
+!        do i=1,nb*2-neup*2
+!          write(*, '(F11.9)')tempVec(i)
+!        enddo  
+!        print*,'sum of NO virts'
+!        write(*, '(F12.9)')sum(tempVec)
+
+!AZ 11/7
+        print*,'E2 (Ha) =',EMP2
+
+        print*,' '
+ 
+        WRITE(*,'(A27,F30.20,A3)')'      Correlation Energy =',EMP2,' au'
+        WRITE(*,'(A27,F30.20,A3)')'     Hartree-Fock Energy =',E0,' au'
+        IF ( nuce .NE. 0) WRITE(*,'(A27,F30.20,A3)')' Nuclear repulsion Energy =',nuce,' au'
+        IF ( nuce .NE. 0) WRITE(*,'(A27,F30.20,A3)')'            Total Energy =',E0+EMP2+nuce,' au'
+        IF ( nuce .EQ. 0) WRITE(*,'(A27,F30.20,A3)')'            Total Energy =',E0+EMP2,' au'
+        print*,' '
+        print*,' '
+
+              
+!AZ 10/3/24
 
         deallocate(MOInts,tei)
+        deallocate(tijab,tempVec,tempMat)   
 contains 
 
        function kronecker(i,j) result(dij)
