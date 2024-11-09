@@ -25,6 +25,8 @@ SUBROUTINE EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
                                        poccA(:,:),&!11/6/24
                                        poccB(:,:),&!11/6/24
                                        pvirt(:,:),&!11/6/24
+                                       pvirtA(:,:),&!11/6/24
+                                       pvirtB(:,:),&!11/6/24
                                        tempVec(:),&!11/7/24
                                        tempMat(:,:)!11/7/24
 
@@ -73,6 +75,8 @@ SUBROUTINE EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
       allocate(pOccA(neup,neup))
       allocate(pOccB(neup,neup))
       allocate(pVirt(nb*2-neup*2,nb*2-neup*2))
+      allocate(pVirtA(nb-neup,nb-neup))
+      allocate(pVirtB(nb-neup,nb-neup))
       allocate(tempVec(nb*2))
       allocate(tempMat(nb*2,nb*2))
 !AZ 11/6/24 
@@ -383,17 +387,22 @@ enddo
        end do
  
         PVirt = 0.0d0
-!        do a = (neup*2)+1,nB*2
-!          do b = (neup*2)+1,nB*2
-!            do i = 1, neup*2
-!              do j = 1, neup*2
-!                do c = (neup*2)+1,nB*2
+        do a = (neup*2)+1,nB*2
+          do b = (neup*2)+1,nB*2
+            do i = 1, neup*2
+              do j = 1, neup*2
+                do c = (neup*2)+1,nB*2
+                 !pq are virt
+                 p = mod(a - 1, neup*2 - nb*2) + 1 
+                 q = mod(b - 1, neup*2 - nb*2) + 1
 !                PVirt(a, b) = 0.5d0*PVirt(a, b) + tijab(i,j,a,c) * tijab(i,j,b,c)
-!                end do
-!             end do
-!           end do
-!         end do
-!       end do
+                 PVirt(p,q) = PVirt(p,q) + &
+                                    0.5d0 * tijab(j,i,c,a) * tijab(i,j,b,c)
+                end do
+             end do
+           end do
+         end do
+       end do
 
 !!      write(*,*)"Pocc"
       write(*,*)
@@ -438,6 +447,27 @@ enddo
          enddo 
        enddo 
 
+       print*,'take alpha tiles of PVirt'
+       do i=1,(nb*2)-(neup*2),2
+         do j=1,(nb*2)-(neup*2),2
+               pVirtA((i+1)/2,(j+1)/2) = PVirt(i,j)
+         enddo 
+       enddo 
+
+       print*,'alpha diag of PVirtA'
+       do i=1,nB-neup
+         print*,pVirtA(i,i)
+       enddo
+!       do i=(neup*2)+2,nb*2,2
+!         do j=(neup*2)+2,nb*2,2
+!           do k=1,nb-neup
+!             do l=1,nb-neup
+!               pVirtB(k,l) = pVirt(i,j)
+!             enddo
+!           enddo
+!         enddo
+!       enddo
+
 
         tempVec = 0.0
         tempMat = 0.0
@@ -448,15 +478,15 @@ enddo
         enddo  
         print*,'sum of NO occs'
         write(*, '(F12.9)')sum(tempVec)
-!        tempVec = 0.0
-!        tempMat = 0.0 
-!        call diagh(PVirt,nb*2-neup*2,tempVec,tempMat)
-!        print*,'NOONs of PVirt MP2'
-!        do i=1,nb*2-neup*2
-!          write(*, '(F11.9)')tempVec(i)
-!        enddo  
-!        print*,'sum of NO virts'
-!        write(*, '(F12.9)')sum(tempVec)
+        tempVec = 0.0
+        tempMat = 0.0 
+        call diagh(PVirtA,nb-neup,tempVec,tempMat)
+        print*,'NOONs of PVirt MP2'
+        do i=1,nb-neup
+          write(*, '(F11.9)')tempVec(i)
+        enddo  
+        print*,'sum of NO virts'
+        write(*, '(F12.9)')sum(tempVec)
 
 !AZ 11/7
         print*,'E2 (Ha) =',EMP2
