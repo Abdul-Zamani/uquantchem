@@ -304,7 +304,7 @@ enddo
        enddo!while
 
 !
-       print*,'ENTER 3rd Order (IP only AZ 3/27/24)'
+       print*,'ENTER 3rd Order (OPENMPVERSION IP and EA AZ 5/15/24)'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!! BEGIN 3rd Order
 
