@@ -437,7 +437,7 @@ PROGRAM uquantchem
         ENDIF
 
 !AZ        IF ( CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
-         IF (CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' .OR. CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
+         IF (CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' .OR. CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
                  
                 ALLOCATE(EHFeigenup(NB),EHFeigendown(NB),Cup(NB,NB),Cdown(NB,NB),P(NB,NB),Pup(NB,NB),Pdown(NB,NB),C1(NB,NB),C2(NB,NB))
                 
@@ -536,7 +536,7 @@ PROGRAM uquantchem
                 
                 
 !AZ8/25                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' ) THEN
-                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' ) THEN
+                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' ) THEN
 
 
                         !print*,'========================================================'
@@ -568,6 +568,8 @@ PROGRAM uquantchem
                 IF ( CORRLEVEL .EQ. 'EPL3so'  ) CALL EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
                 IF ( CORRLEVEL .EQ. 'EPP3so'  ) CALL EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+                                             ETOT-nucE,nuce,SPINCONSERVE)
+                IF ( CORRLEVEL .EQ. 'EP2plus3r'  ) CALL EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
                 IF ( CORRLEVEL .EQ. 'EPQ3so'  ) CALL EPQ3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)

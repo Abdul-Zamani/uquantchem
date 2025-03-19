@@ -266,10 +266,12 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
 
        if(abs(EPole-EPoleOld).lt.0.0001.or.iter.eq.15) then
        D2 = E
-       S2ph=SEold1
-       S2hp=SEold2
-       dS2ph=dSEold1
-       dS2hp=dSEold2
+!       S2ph=SEold1
+!       S2hp=SEold2
+!       dS2ph=dSEold1
+!       dS2hp=dSEold2
+!       secondOrder=S2ph+S2hp
+!       secondOrderDeriv=dS2ph+dS2hp
        !print*,'S2ph and S2hp in d2',S2ph,S2hp
        !print*,'dS2ph and dS2hp in d2',dS2ph,dS2hp
        !print*,'in D2: S2hp',S2hp
@@ -304,10 +306,10 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
         PS=0.0d0 !reset PS for 3rd order 
 
         !reset 2nd and 3rd order collective terms
-        secondOrder=0.0d0
-        thirdOrder=0.0d0
-        secondOrderDeriv=0.0d0
-        thirdOrderDeriv=0.0d0
+!        secondOrder=0.0d0
+!        thirdOrder=0.0d0
+!        secondOrderDeriv=0.0d0
+!        thirdOrderDeriv=0.0d0
 
         E = ((eps(pole)*0.92)+D2)/2.0d0 !average pole: shifted HF plus D2
         conver = .false. 
@@ -388,6 +390,10 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
 
        !save 2nd order derivatives
        secondOrderDeriv = dSEold1+dSEold2
+       S2ph=SEold1
+       S2hp=SEold2
+       dS2ph=dSEold1       
+       dS2hp=dSEold2        
 
        !B terms: energy independent
        B1=0.0d0 
@@ -997,10 +1003,10 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
 
        if(abs(EPole-EPoleOld).lt.0.00001.or.iter.eq.15) then
        D3 = E
-       S2ph = SEOld1
-       S2hp = SEOld2
-       dS2ph = dSEOld1
-       dS2hp = dSEOld2
+!       S2ph = SEOld1
+!       S2hp = SEOld2
+!       dS2ph = dSEOld1
+!       dS2hp = dSEOld2
        print*,'Koopmans =',eps(pole)
        print*,'P3 (Ha) =',D3
        print*,'P3 (eV) =',D3*27.2114
@@ -1028,10 +1034,10 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
         PS=0.0d0 !reset PS for 3rd order 
 
         !reset 2nd and 3rd order collective terms
-        secondOrder=0.0d0
-        thirdOrder=0.0d0
-        secondOrderDeriv=0.0d0
-        thirdOrderDeriv=0.0d0
+!        secondOrder=0.0d0
+!        thirdOrder=0.0d0
+!        secondOrderDeriv=0.0d0
+!        thirdOrderDeriv=0.0d0
         !print*,'P3 before P3+',D3
         E = (D3)!(D3)!P3 pole
         conver = .false. 
@@ -1070,7 +1076,7 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
        SEOld1 = SEOld1AA/2.0d0 
        SEOld2 = SEOld2AA/2.0d0
 !save 2nd order terms
-       secondOrder =  SEOld1+SEOld2
+!       secondOrder =  SEOld1+SEOld2
        EPole = eps(pole) + SEOld1+SEOld2
 !!       print*,'sigma(2)',SEOld1+SEOld2
 !!       print*,'SEOld1',SEOld1
@@ -1116,7 +1122,7 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
        dS2hp=dSEOld2
        !save 2nd order derivatives
        secondOrderDeriv = dS2ph+dS2hp
-
+       !print*,'2nd Order deriv in P3+',secondOrderDeriv
 
 !save 2nd order terms
        secondOrder =  S2ph+S2hp
@@ -1734,10 +1740,11 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
        dR2hp = A11+A12 
 
 !not quite this V
-!!!       Aterms=(dS2hp)/(dS2hp-(dP2hp/2.0d0))
+!       Aterms=(dS2hp)/(dS2hp-(dP2hp/2.0d0))
+!factor
        Aterms=(1.0d0) / &
               (1.0d0 - &
-              (((dP2hp*0.5d0)/(dS2hp))) &
+              (((P2hp)/(2.0d0*S2hp))) &
               )
        Aterms=Aterms*(dR2hp+(dP2hp/2.0d0))
 
@@ -1771,11 +1778,11 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
 !       print*,'dP2hp',dP2hp
 !       print*,'R2hp',R2hp
 !       print*,'dR2hp',dR2hp
- 
+       print*,'2nd Order deriv in P3+',secondOrderDeriv 
        print*,'Deriv',deriv
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(deriv))))
        PS = 1/(1-(deriv))
-       print*,'E after NRstep',E      
+       !print*,'E after NRstep',E      
 
 
        iter=iter+1

@@ -304,6 +304,7 @@ SUBROUTINE EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
         thirdOrderDeriv=0.0d0
 
         E = ((eps(pole)*0.92)+D2)/2.0d0 !average pole: shifted HF plus D2
+       !!  E = (eps(pole)) !CO O1s 
         conver = .false. 
 
         EPoleOld=E
@@ -1100,11 +1101,11 @@ SUBROUTINE EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        deriv = secondOrderDeriv+thirdOrderDeriv
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(deriv))))
        PS = 1/(1-(deriv))
-       !print*,'E after NRstep',E      
+       print*,'E after NRstep',E      
 
        iter=iter+1
 
-       if(abs(EPole-EPoleOld).lt.0.00001.or.iter.eq.15) then
+       if(abs(EPole-EPoleOld).lt.0.00001.or.iter.eq.25) then
        D3 = E
        print*,'Koopmans =',eps(pole)
 
@@ -1118,7 +1119,7 @@ SUBROUTINE EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        print*,'D3 (eV) =',D3*27.2114
        print*,'PS =',PS
        conver=.true.
-       if(iter.eq.15) then 
+       if(iter.eq.25) then 
          print*,'pole not converged after',iter,'iter'
        endif 
        endif 

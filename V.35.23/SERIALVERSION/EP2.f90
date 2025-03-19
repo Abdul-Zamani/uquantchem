@@ -197,11 +197,11 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
 
         
 
-        osd2 = .true. !flag for OS
+        osd2 = .false. !flag for OS
 
         print*,'OSD2 is',osd2 
 
-        do pole=1,10 !!!!! begin pole search
+        do pole=1,NB !!!!! begin pole search
 
         iter=0 !max iter 15 for now
 
@@ -243,7 +243,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         do i=1,Nedown
           do a=NeUp+1,NB 
             do b=Nedown+1,NB
-               SEold1AB = SEold1AB + (((moIntsAB(pole,a,i,b))**2.0d0) / &
+               SEold1AB = SEold1AB + ( ((moIntsAB(pole,a,i,b))**2.0d0) / &
 
 
                (EPoleOld + EHFeigendown(i) -EHFeigenup(a)-EHFeigendown(b)))
@@ -257,7 +257,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         do a=Neup+1,Nb
           do i=1,NeUp 
             do j=1,NeUp
-               SEold2AA = SEold2AA + (((moIntsAA(pole,i,a,j)-moIntsAA(pole,j,a,i))**2.0d0) / &
+               SEold2AA = SEold2AA + ( ((moIntsAA(pole,i,a,j)-moIntsAA(pole,j,a,i))**2.0d0) / &
                (EPoleOld + EHFeigenup(a) -EHFeigenup(i)-EHFeigenup(j)) )
             enddo
           enddo 
@@ -268,7 +268,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         do a=Nedown+1,NB
           do i=1,NeUp 
             do j=1,Nedown
-               SEold2AB = SEold2AB + (((moIntsAB(pole,i,a,j))**2.0d0) / &
+               SEold2AB = SEold2AB + ( ((moIntsAB(pole,i,a,j))**2.0d0) / &
 
 
                (EPoleOld + EHFeigendown(a) -EHFeigenup(i)-EHFeigendown(j)))
@@ -281,7 +281,9 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
        SEOld2 = SEOld2AA/2.0d0 + SEOld2AB
        EPole = EHFeigenup(pole) + SEOld1+SEOld2
 !!       print*,'sigma(2)',SEOld1+SEOld2
-
+       print*,'SEOld1',SEOld1
+       print*,'SEOld2',SEOld2
+         
 
 !derivatives
         SEOld1AA = 0.0d0
@@ -310,7 +312,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         do i=1,Nedown
           do a=NeUp+1,NB 
             do b=Nedown+1,NB
-               SEold1AB = SEold1AB + (((moIntsAB(pole,a,i,b))**2.0d0) / &
+               SEold1AB = SEold1AB + ( ((moIntsAB(pole,a,i,b))**2.0d0) / &
 
 
                (EPoleOld + EHFeigendown(i) -EHFeigenup(a)-EHFeigendown(b))**2)
@@ -324,7 +326,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         do a=Neup+1,Nb
           do i=1,NeUp 
             do j=1,NeUp
-               SEold2AA = SEold2AA + (((moIntsAA(pole,i,a,j)-moIntsAA(pole,j,a,i))**2.0d0) / &
+               SEold2AA = SEold2AA + ( ((moIntsAA(pole,i,a,j)-moIntsAA(pole,j,a,i))**2.0d0) / &
                (EPoleOld+ EHFeigenup(a) -EHFeigenup(i)-EHFeigenup(j))**2 )
             enddo
           enddo 
@@ -336,7 +338,7 @@ SUBROUTINE EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nuce
         do a=Nedown+1,NB
           do i=1,NeUp 
             do j=1,Nedown
-               SEold2AB = SEold2AB + (((moIntsAB(pole,i,a,j))**2.0d0) / &
+               SEold2AB = SEold2AB + ( ((moIntsAB(pole,i,a,j))**2.0d0) / &
 
 
                (EPoleOld + EHFeigendown(a) -EHFeigenup(i)-EHFeigendown(j))**2)

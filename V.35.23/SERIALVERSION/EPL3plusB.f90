@@ -1965,13 +1965,13 @@ SUBROUTINE EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E
        !L3 2ph and 2hp treated equally
        Aterms=(((1.0d0) / &
               (1.0d0 - &
-              (((dP2hp*0.5d0)/(dS2hp))) &
+              (((P2hp*0.5d0)/(S2hp))) &
               ))*&
               ((dR2hp+(dP2hp/2.0d0))))
        Aterms=Aterms+&
               (((1.0d0) / &
               (1.0d0 - &
-              (((dP2ph*0.5d0)/(dS2ph))) &
+              (((P2ph*0.5d0)/(S2ph))) &
               ))*&
               ((dR2ph+(dP2ph/2.0d0))))
 

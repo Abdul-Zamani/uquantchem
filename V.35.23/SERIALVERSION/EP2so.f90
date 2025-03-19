@@ -61,7 +61,6 @@ SUBROUTINE EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
         print*,' '
         print*,' '
         print*,' '
-
 !MO ints
       print*,'   AA   '        
       tempInts1=0.0d0 
@@ -159,6 +158,7 @@ SUBROUTINE EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
 
         !AZ if tiled by spin, 2*poleIndex
         do pole=1,(neup*2)+1,2 !!!!! begin pole search
+
 
         iter=0 !max iter 15 for now
 

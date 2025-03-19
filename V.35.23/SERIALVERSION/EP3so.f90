@@ -494,6 +494,17 @@ SUBROUTINE EP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
 
        !no B term derivatives
 
+!AZ
+       print*,''
+       print*,'B1',B1
+       print*,'B2',B2
+       print*,'B3',B3
+       print*,'B4',B4
+       print*,'B5',B5
+       print*,'B6',B6
+       print*,''
+!AZ
+
        !Total of B terms
        Bterms=B1+B2+B3+B4+B5+B6 
  
@@ -735,6 +746,23 @@ SUBROUTINE EP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
         !factor 
         A12=(-0.25d0)*A12
 
+
+!AZ
+       print*,''
+       print*,'A1',A1
+       print*,'A2',A2
+       print*,'A3',A3
+       print*,'A4',A4
+       print*,'A5',A5
+       print*,'A6',A6
+       print*,'A7',A7
+       print*,'A8',A8
+       print*,'A9',A9
+       print*,'A10',A10
+       print*,'A11',A11
+       print*,'A12',A12
+       print*,''
+!AZ
 
        !Total of A terms 
        Aterms=A1+A2+A3+A4+A5+A6+A7+A8+A9+A10+A11+A12 

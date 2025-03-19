@@ -145,6 +145,14 @@ SUBROUTINE URHF(MULTIPLICITY,BSURHF,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EH
 !AZ 8/23
                 ENDIF
 
+!AZ 1/11
+!Test transition operator
+                         !Seems you can get hole states with n=0
+                         !n=0.5 gives decent core eigenvalue
+                         !print*,'test TO n=0.5'
+                         !Pup(1,:)  = Pup(1,:)*(0.5d0) 
+!AZ 1/11
+
                 PT = Pup + Pdown
                
                 ! Calculating the change of the total density matrix:
@@ -294,7 +302,9 @@ SUBROUTINE URHF(MULTIPLICITY,BSURHF,S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigenup,EH
                             print*,'Nbeta',Nedown
                             print*,'SSIJ',SSIJ
                             print*,'Sz(Sz+1)=', Sz*(Sz+1.0d0)
-                            print*,'S2=',S2 
+                            print*,'S2=',S2
+
+ 
                         DEALLOCATE(SABMO)
 !AZ 8/23
 

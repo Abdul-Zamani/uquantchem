@@ -291,8 +291,8 @@ SUBROUTINE EP2nD(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
        SEOld2 =  SEOld2AB
        EPole = EHFeigenup(pole) + SEOld1+SEOld2
 !!       print*,'sigma(2)',SEOld1+SEOld2
-         print*,'2ph',SEOld1
-         print*,'2hp',SEOld2
+!!         print*,'2ph',SEOld1
+!!         print*,'2hp',SEOld2
 
 !derivatives
         SEOld1AA = 0.0d0
@@ -349,8 +349,10 @@ SUBROUTINE EP2nD(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
        SEold1 = -1.0d0*(SEOld1AB)
        SEold2 = -1.0d0*(SEOld2AB)
 
-       print*,'slope PPH',SEold1
-       print*,'slope HHP',SEold2
+       !!check if 2ph is fixed for IP
+       !!and if 2hp is fixed for EA
+       !!print*,'slope PPH',SEold1
+       !!print*,'slope HHP',SEold2
 
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(SEold1+SEold2))))
        PS = 1/(1-(SEold1+SEold2))
