@@ -41,7 +41,10 @@ SUBROUTINE toEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
       DOUBLE PRECISION :: Sz,twoSP1,Nalpha,Nbeta,SEOld1,SEOld2,&
                           SEOld1AA,SEOld1AB,SEOld2AA,SEOld2AB,&
                           EMP2,EMP2AA,EMP2AB,EMP2BA,EMP2BB,EPole,EPoleOld,E,PS,&
-                          X1,X2
+                          X1,X2,Np
+!AZ 3/23/25
+      DOUBLE PRECISION :: numer,denom,R2,R2AA,R2BB,R2AB,R2BA
+!AZ 3/23/25 
 !AZ 10/3/24
      DOUBLE PRECISION :: trPOcc,trPVirt                                              
      DOUBLE PRECISION :: wInts, wIntsAA,wIntsAB,wIntsBB
@@ -236,7 +239,9 @@ enddo
         EPoleOld=E
         do while(conver.eqv..false.)
        !! print*,'conver',conver 
-!SE1  
+
+
+!SE1 2ph   
 !AA
         do i=1,Neup*2
           do a=(NeUp*2)+1,NB*2
@@ -249,7 +254,7 @@ enddo
         enddo
 
 
-!SE2
+!SE2 2hp 
 !AA
         do a=(Neup*2)+1,Nb*2
           do i=1,NeUp*2 
@@ -277,7 +282,7 @@ enddo
 
        SEOld1=0.0d0
        SEOld2=0.0d0
-!SE1  
+!SE1 2ph   
 !AA
         do i=1,Neup*2
           do a=(NeUp*2)+1,NB*2
@@ -289,7 +294,7 @@ enddo
           enddo 
         enddo
 
-!SE2
+!SE2 2hp 
 !AA
         do a=(Neup*2)+1,Nb*2
           do i=1,NeUp*2
@@ -303,6 +308,74 @@ enddo
        SEold1 = -1.0d0*(SEold1AA/2.0d0)
        SEold2 = -1.0d0*(SEold2AA/2.0d0)
 
+!ORX AA
+        numer= 0.0d0
+        denom= 0.0d0
+        R2   = 0.0d0
+        R2AA = 0.0d0
+        R2BB = 0.0d0
+        R2AB = 0.0d0
+        R2BA = 0.0d0
+!<pa||pi>/e(a)-e(i) IP 
+!<pi||pa>/e(i)-e(a) EA
+        if(pole.le.nEup*2) then !ip relax  
+
+!AA aa||aa  pp||ai 
+        do i=1,Neup*2
+          do a=(NeUp*2)+1,NB*2
+            denom = eps(a) - eps(i)
+            numer = (tei(pole,a,pole,i))
+            numer = numer*numer 
+            R2AA  =  R2AA + numer/denom 
+          enddo
+        enddo
+
+       R2BB = R2AA
+
+!AB aa||bb pp||ai  
+        do i=1,NeDown*2
+          do a=(NeDown*2)+1,NB *2
+            denom = eps(a) - eps(i)
+            numer = (tei(pole,a,pole,i)) 
+            numer = numer*numer 
+!            R2AB  =  R2AB + numer/denom 
+           enddo
+         enddo 
+
+        elseif(pole.gt.neUp) then !ea relax
+
+!AA aa||aa  pp||ai 
+        do i=1,Neup*2
+          do a=(NeUp*2)+1,NB*2
+            denom = eps(i) - eps(a)
+            numer = (tei(pole,i,pole,a)) 
+            numer = numer*numer 
+            R2AA  =  R2AA + numer/denom 
+          enddo
+        enddo
+
+       R2BB = R2AA
+
+!AB aa||bb pp||ai  
+        do i=1,NeDown*2
+          do a=(NeDown*2)+1,NB*2
+            denom = eps(i) - eps(a)
+            numer = (tei(pole,i,pole,a))     
+            numer = numer*numer 
+!            R2AB  =  R2AB + numer/denom 
+           enddo
+         enddo 
+
+
+        endif!end relax 
+
+       R2BA = R2AB
+
+       R2 = R2AA + R2AB 
+
+!
+
+
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(SEold1+SEold2))))
        PS = 1/(1-(SEold1+SEold2))
        !print*,'E after NRstep',E      
@@ -313,6 +386,13 @@ enddo
        print*,'Koopmans =',eps(pole)
        print*,'D2 (Ha) =',E
        print*,'D2 (eV) =',E*27.2114
+       print*,'R2 (Ha) =',R2
+       print*,'R2 AA (Ha) =',R2AA
+       print*,'R2 AB (Ha) =',R2AB
+       print*,'eps+R2 (Ha) =',(0.0d0-(eps(pole)+R2))
+       print*,'eps+R2 (eV) =',(0.0d0-(eps(pole)+R2))*27.2114
+!       print*,'eps+R2 (Ha) =',((0.0d0-eps(pole))-R2)
+!       print*,'eps+R2 (eV) =',((0.0d0-eps(pole))-R2)*27.2114
        print*,'PS =',PS
        conver=.true.
        if(iter.eq.15) then 
