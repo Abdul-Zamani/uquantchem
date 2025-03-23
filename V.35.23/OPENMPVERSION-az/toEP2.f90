@@ -30,7 +30,9 @@ SUBROUTINE toEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
                                        tempVec(:),&!11/7/24
                                        tempMat(:,:),&!11/7/24
                                        onoon(:),&!3/19/25 
-                                       vnoon(:)!3/19/25
+                                       vnoon(:),&!3/19/25
+                                       Nvec(:),&!3/23/25
+                                       canON(:)!3/23/25
 
       DOUBLE PRECISION, ALLOCATABLE :: tempInts1(:,:,:,:), & 
                                        tempInts2(:,:,:,:), &
@@ -41,7 +43,7 @@ SUBROUTINE toEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
       DOUBLE PRECISION :: Sz,twoSP1,Nalpha,Nbeta,SEOld1,SEOld2,&
                           SEOld1AA,SEOld1AB,SEOld2AA,SEOld2AB,&
                           EMP2,EMP2AA,EMP2AB,EMP2BA,EMP2BB,EPole,EPoleOld,E,PS,&
-                          X1,X2,Np
+                          X1,X2,Np,EPoleOldgc,EPolegc,Egc,PSgc,SEOldgc,SEgc 
 !AZ 3/23/25
       DOUBLE PRECISION :: numer,denom,R2,R2AA,R2BB,R2AB,R2BA
 !AZ 3/23/25 
@@ -49,7 +51,7 @@ SUBROUTINE toEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
      DOUBLE PRECISION :: trPOcc,trPVirt                                              
      DOUBLE PRECISION :: wInts, wIntsAA,wIntsAB,wIntsBB
 !AZ 10/3/24
-      INTEGER :: a,b,c,d,r,s,pole,mu,nu,lam,sig,neup,nedown,iter
+      INTEGER :: a,b,c,d,r,s,t,pole,mu,nu,lam,sig,neup,nedown,iter
      
           
       !AZ 
@@ -90,6 +92,10 @@ SUBROUTINE toEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0,nu
       allocate(onoon(neup))
       allocate(vnoon(nb-neup))
 !AZ 3/19/25
+!AZ 3/23/25
+      allocate(Nvec(nb*2)) 
+      allocate(canON(nb))
+!AZ 3/23/25
 
       !Quarter transformations: O(N^5)
         print*,' '
@@ -210,7 +216,25 @@ enddo
        eps(i) = EHFeigenup(int((i+1)/2))
        print*,'eps',i,eps(i)
      enddo 
-  
+!AZ 3/23/25 tom orb
+        !canon occs for now
+        canON(1:neup) = 1.0d0
+        canON(neup+1:nB) = 0.0d0 
+!tile spin for eigenvalues
+     do i=1,(nB*2)
+       Nvec(i) = canON(int((i+1)/2))
+       print*,'Nvec before',i,Nvec(i)
+     enddo
+!        if((int(pole/2)+1)==5) then
+!          Np = 0.993507650 !0.5d0 !tom orbital
+!          print*,'tom orb (1/2)', int(pole/2)+1
+!          elseif((int(pole/2)+1).le.(Neup)) then 
+!          Np = 1.0d0 
+!          elseif((int(pole/2)+1).gt.(Neup)) then
+!          Np = 0.0d0 
+!        endif 
+!AZ 3/23/25
+
      deallocate(tempInts1,tempInts2,tempInts3)
 
         !AZ if tiled by spin, 2*poleIndex
@@ -224,21 +248,27 @@ enddo
         print*,' '
         
         E=0.0d0
+        Egc=0.0d0 !AZ 3/23 for gc d2 
         SEOld1AA = 0.0d0
         SEOld1AB = 0.0d0
         SEOld2AA = 0.0d0
         SEOld2AB = 0.0d0
 
+        SEOldgc =0.0d0 !AZ 3/23/25
+        SEgc = 0.0d0 !AZ 3/23/25 
 
         SEold1 = 0.0d0
         SEold2 = 0.0d0
         PS=0.0d0
         E = eps(pole)*0.92 !EHFeigenup(pole)*0.92
+        Egc = eps(pole)*0.92 !AZ 3/23 for gc d2
         conver = .false. 
 
         EPoleOld=E
+        EPoleOldgc=Egc !AZ 3/23 for gc d2
         do while(conver.eqv..false.)
        !! print*,'conver',conver 
+
 
 
 !SE1 2ph   
@@ -264,7 +294,28 @@ enddo
             enddo
           enddo 
         enddo
-     
+
+!AZ 3/23/25     
+!gcD2
+!http://dx.doi.org/10.1016/bs.arcc.2017.06.002
+!Nqst = nq(1-ns-nt)+ns*nt
+!(1-nq)*ns*nt + nq*(1-ns)*(1-nt)
+      do q=1,Nb*2   
+        do s=1,Nb*2 
+          do t=1,Nb*2 
+          SEOldgc = SEOldgc + &
+!                    (Nvec(q)*(1-Nvec(s)-Nvec(t)))+(Nvec(s)*Nvec(t)) * &
+                    (( Nvec(q)*(1-Nvec(s))*(1-Nvec(t)) )+&
+                    ( (1-Nvec(q))*(Nvec(s)*(Nvec(t))) ) )* &  
+!                    ( ((tei(pole,q,s,t))**2.0d0) / &
+                    ( ((tei(pole,q,s,t))*(tei(s,t,pole,q))) / &
+                    (EPoleOldgc + eps(q) -eps(s)-eps(t)) )
+!          print*,"Nqst", ( Nvec(q)*(1-Nvec(s))*(1-Nvec(t)) )+&
+!                         ( (1-Nvec(q))*(Nvec(s)*(Nvec(t))) )
+          enddo 
+        enddo 
+      enddo 
+!AZ 3/23/25     
 
 !new NR instead
        SEOld1 = SEOld1AA/2.0d0 
@@ -274,11 +325,21 @@ enddo
        print*,'SEOld1',SEOld1
        print*,'SEOld2',SEOld2
 
+!AZ 3/23/25     
+       SEgc = SEOldgc/2.0d0
+       EPolegc = eps(pole) + SEgc
+!AZ 3/23/25     
+
 !derivatives
         SEOld1AA = 0.0d0
         SEOld1AB = 0.0d0
         SEOld2AA = 0.0d0
         SEOld2AB = 0.0d0
+
+!AZ 3/23/25    
+       SEOldgc = 0.0d0 !zero-out, re-use var 
+       SEgc = 0.0d0 !zero-out, re-use var  
+!AZ 3/23/25    
 
        SEOld1=0.0d0
        SEOld2=0.0d0
@@ -308,6 +369,24 @@ enddo
        SEold1 = -1.0d0*(SEold1AA/2.0d0)
        SEold2 = -1.0d0*(SEold2AA/2.0d0)
 
+!AZ 3/23/25     
+!gcD2 deriv
+!Nqst = nq(1-ns-nt)+ns*nt
+      do q=1,Nb*2
+        do s=1,Nb*2
+          do t=1,Nb*2
+          SEOldgc = SEOldgc + &
+                    !(Nvec(q)*(1-Nvec(s)-Nvec(t)))+(Nvec(s)*Nvec(t)) * &
+                    (( Nvec(q)*(1-Nvec(s))*(1-Nvec(t)) )+&
+                    ( (1-Nvec(q))*(Nvec(s)*(Nvec(t))) ) )* &
+                    ( ((tei(pole,q,s,t))**2.0d0) / &
+                    (EPoleOldgc + eps(q) -eps(s)-eps(t))**2 )
+          enddo
+        enddo
+      enddo
+     SEgc = -1.0d0*(SEoldgc/2.0d0)
+!AZ 3/23/25 
+    
 !ORX AA
         numer= 0.0d0
         denom= 0.0d0
@@ -316,6 +395,8 @@ enddo
         R2BB = 0.0d0
         R2AB = 0.0d0
         R2BA = 0.0d0
+        
+
 !<pa||pi>/e(a)-e(i) IP 
 !<pi||pa>/e(i)-e(a) EA
         if(pole.le.nEup*2) then !ip relax  
@@ -325,7 +406,7 @@ enddo
           do a=(NeUp*2)+1,NB*2
             denom = eps(a) - eps(i)
             numer = (tei(pole,a,pole,i))
-            numer = numer*numer 
+            numer = numer*numer !*(1-Np)  
             R2AA  =  R2AA + numer/denom 
           enddo
         enddo
@@ -337,7 +418,7 @@ enddo
           do a=(NeDown*2)+1,NB *2
             denom = eps(a) - eps(i)
             numer = (tei(pole,a,pole,i)) 
-            numer = numer*numer 
+            numer = numer*numer !*(1-Np) 
 !            R2AB  =  R2AB + numer/denom 
            enddo
          enddo 
@@ -349,7 +430,7 @@ enddo
           do a=(NeUp*2)+1,NB*2
             denom = eps(i) - eps(a)
             numer = (tei(pole,i,pole,a)) 
-            numer = numer*numer 
+            numer = numer*numer !*(Np) 
             R2AA  =  R2AA + numer/denom 
           enddo
         enddo
@@ -361,7 +442,7 @@ enddo
           do a=(NeDown*2)+1,NB*2
             denom = eps(i) - eps(a)
             numer = (tei(pole,i,pole,a))     
-            numer = numer*numer 
+            numer = numer*numer !*(Np) 
 !            R2AB  =  R2AB + numer/denom 
            enddo
          enddo 
@@ -377,6 +458,8 @@ enddo
 
 
        E = (EpoleOld - ((EpoleOld-Epole)/(1-(SEold1+SEold2))))
+       Egc = (EpoleOldgc - ((EpoleOldgc-Epolegc)/(1-(SEgc)))) !AZ gc d2 
+       PSgc = 1/(1-(SEgc)) !AZ gc d2
        PS = 1/(1-(SEold1+SEold2))
        !print*,'E after NRstep',E      
 
@@ -394,11 +477,30 @@ enddo
 !       print*,'eps+R2 (Ha) =',((0.0d0-eps(pole))-R2)
 !       print*,'eps+R2 (eV) =',((0.0d0-eps(pole))-R2)*27.2114
        print*,'PS =',PS
+       print*,'gcD2 (Ha) =',Egc
+       print*,'gcD2 (eV) =',Egc*27.2114
+       print*,'gsPS =',PSgc
        conver=.true.
        if(iter.eq.15) then 
          print*,'pole not converged after',iter,'iter'
        endif 
        endif 
+
+!AZ 3/23/25
+       if(abs(EPolegc-EPoleOldgc).lt.0.0001.or.iter.eq.15) then
+       print*,'gcD2 (Ha) =',Egc
+       print*,'gcD2 (eV) =',Egc*27.2114
+       print*,'gsPS =',PSgc
+       conver=.true.
+       if(iter.eq.15) then 
+         print*,'pole not converged after',iter,'iter'
+       endif 
+       endif 
+       EPoleOldgc = Egc 
+       SEgc = 0.0d0 
+       SEOldgc = 0.0d0 
+!AZ 3/23/25 
+
 
        EPoleOld=E
        SEOld1=0.0d0
