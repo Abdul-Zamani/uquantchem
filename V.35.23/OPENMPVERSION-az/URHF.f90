@@ -23,7 +23,8 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
 !AZ 8/23
       DOUBLE PRECISION, ALLOCATABLE :: SABMO(:,:)
       DOUBLE PRECISION :: SSIJ,S2
-      LOGICAL :: BSURHF
+      DOUBLE PRECISION :: CupOld(NB,NB), CdownOld(NB,NB) !for MOM 3/28/25
+      LOGICAL :: BSURHF !momflag 
 !AZ 8/23      
 
       MIXING  = MIX(1)
@@ -150,17 +151,36 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                 ! XL-BOMD scheme and not the coefficient matrices Cup and Cdown
                 ! Therefor we have the if-construct here.
                 !==============================================================
+
                 IF ( I .GT. 0 ) THEN
                         IF ( ETEMP .LE. 0.0d0 ) THEN
+                                if(BSURHF) then
+                                  if(I.eq.1) then
+                                  !AZ 3/29 hard code imom
+                                  cupold = cup
+                                  !cdownold = cdown 
+                                  cupOld(:,1) =  cupOld(:,1)*0.5d0
+                                  !cdownOld(:,1) =  cdownOld(:,1)*0.5d0 
+                                  cup=cup*.9
+                                  !cdown=cdown*.9 
+                                  endif 
+                                  if(I.ge.1) then 
+                                  call mom(Cup,CupOld,S,NB,Neup,Pup,1)
+                                  !call mom(Cdown,CdownOld,S,NB,Nedown,Pdown,2)
+                                  CALL makedens(Cdown,NB,Pdown)
+                                  endif 
+                                else 
                                 CALL makedens(Cup,NB,Pup)
                                 CALL makedens(Cdown,NB,Pdown)
+                                endif 
+ 
                         ELSE
                                 CALL makedensT(TOLDNe,Cup,Cdown,EHFeigenup,EHFeigendown,ETEMP,NB,Ne,Pup,Pdown,mu,ENTROPY)
                         ENDIF
                 ENDIF
-                
+
                 PT = Pup + Pdown
-               
+            
                 ! Calculating the change of the total density matrix:
                 DELTAP = sqrt(DOT_PRODUCT(reshape(PT-PTold,(/NB**2/)),reshape(PT-PTold,(/NB**2/))))
                 
@@ -171,7 +191,7 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                 ELSE
                         Pup = Pup
                         Pdown = Pdown
-                ENDIF
+               ENDIF
 
                 Pupold = Pup
                 Pdownold = Pdown
@@ -373,6 +393,18 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
         ENDDO
         CLOSE(21)
      ENDIF
+!AZ 3/28 write mo coeff
+     !WRITE(*,*) Cup(:,1)
+     IF ( POUT ) THEN
+        OPEN(24,FILE='alphaMO.dat',ACTION='WRITE')
+        DO I=1,NB
+          DO J=1,NB
+                WRITE(24,*) Cup(I,J)!Cup(J,I) 
+          ENDDO 
+        ENDDO
+        CLOSE(24)
+     ENDIF
+!AZ 3/28 write mo coeff 
      IF ( ETEMP .GT. 0.0d0 ) ETOT = FTOT
 END SUBROUTINE URHF
 

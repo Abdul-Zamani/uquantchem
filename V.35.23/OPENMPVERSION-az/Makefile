@@ -12,9 +12,9 @@ FFLAGS =  -fopenmp -ffree-form -ffree-line-length-none -frecursive
 
 F77FLAGS = -fopenmp -ffixed-form -frecursive
 
-LAPACKPATH = /usr/lib64/
+LAPACKPATH = /ihome/kcarter-fenk/ayz24/lapack/lib64
 
-BLASPATH = /usr/lib64/
+BLASPATH = /ihome/kcarter-fenk/ayz24/blas/lib
 
 LIB = -L$(LAPACKPATH) -llapack -L$(BLASPATH) -lblas
 
@@ -27,7 +27,7 @@ SOURCE = datatypemodule.o exchcorrmodule.o functionsmodule.o random.o Afunc.o RH
 	interpol.o gradbasfunkval.o laplacebasfunkval.o hforbitalval.o gradhforbitalval.o laplacehforbitalval.o det.o \
 	stoexponent.o slaterdet.o laplaceslaterdet.o gradslaterdet.o jastrowup.o jastrowdown.o jastrowud.o jastrow.o \
 	DIIS.o preparedifusion.o gradjastrow.o laplacejastrow.o guideforce.o laplacetrialfnk.o trialfnk.o EL.o dqmc.o \
-	findclosestatom.o ROOTWEIGHTMAX3.o readbasis.o primpotential.o primoverlap.o primkinetic.o EP2.o EP2so.o EP2pt5so.o EP3so.o \
+	findclosestatom.o ROOTWEIGHTMAX3.o readbasis.o primpotential.o primoverlap.o primkinetic.o mom.o EP2.o toEP2.f90 gcEP2.o EP2so.o EP2pt5so.o EP3so.o \
          EP2plus3r.o EPP3so.o EPQ3so.o EPP3plus.o EPQ3plus.o EPL3so.o EPL3plusB.o EP2r.o EP3r.o EP2nD.o UEP2.o UEP2nD.o MP2.o uquantchem.o \
 	gradprimoverlap.o gradprimkinetic.o gradprimpotential.o gradprimeeintegral.o forces.o forcesz.o dAfunc.o relax.o linesearchmin.o \
 	massa.o moleculardynamics.o invert.o vxc.o vxcalt.o dvxc.o ngbasfunkval.o nggradbasfunkval.o nglaplacebasfunkval.o \

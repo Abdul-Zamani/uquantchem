@@ -839,7 +839,7 @@ PROGRAM uquantchem
         ENDIF
 
 !AZ        IF ( CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
-         IF (CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' .OR. CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN                
+         IF (CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'toEP2' .OR. CORRLEVEL .EQ. 'gcEP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' .OR. CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN                
                 ALLOCATE(EHFeigenup(NB),EHFeigendown(NB),Cup(NB,NB),Cdown(NB,NB),P(NB,NB),C1(NB,NB),C2(NB,NB),Pgup(NB,NB),Pgdown(NB,NB))
                 ALLOCATE(Cupc(NB,NB),Cdownc(NB,NB),Pupc(NB,NB),Pdownc(NB,NB),Pupp(NB,NB),Pdownn(NB,NB))
                 
@@ -851,6 +851,12 @@ PROGRAM uquantchem
                         IF ( .not. DFTC ) THEN
                                 CALL URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE.,SCRATCH,.FALSE. &
                                 &,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
+!AZ call again
+                                BSURHF=.true.
+                                Cup(:,1) = Cup(:,1)*0.5d0 
+                                CALL URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE.,SCRATCH,.FALSE. &
+                                &,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
+!AZ
                                 IF ( DOTDFT ) THEN
                                         ETEMPE = ETEMP
                                         Pupc = Pup
@@ -1043,7 +1049,7 @@ PROGRAM uquantchem
                 ENDIF
                 
 !AZ8/25                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' ) THEN
-                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' ) THEN
+                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'toEP2' .OR. CORRLEVEL .EQ. 'gcEP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' ) THEN
                         !print*,'========================================================'
                         !print*,'  Tranfering (ij|kl) from vector to tensor form         '
                         !print*,'========================================================'
@@ -1065,6 +1071,10 @@ PROGRAM uquantchem
                 DEALLOCATE(Intsv)
 !AZ12/17             
                 IF ( CORRLEVEL .EQ. 'EP2'  ) CALL EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+                                             ETOT-nucE,nuce,SPINCONSERVE)
+                IF ( CORRLEVEL .EQ. 'toEP2'  ) CALL toEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+                                             ETOT-nucE,nuce,SPINCONSERVE)
+                IF ( CORRLEVEL .EQ. 'gcEP2'  ) CALL gcEP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
                 IF ( CORRLEVEL .EQ. 'EP2so'  ) CALL EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
