@@ -1,5 +1,5 @@
 SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,&
-                & NSCF,FIXNSCF,POUT,SCRATCH,ZEROSCF,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
+                & NSCF,FIXNSCF,POUT,SCRATCH,ZEROSCF,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX,Cref1,Cref2)
       ! This subroutine calculates the self consistent UN-Restricted
       ! Hartree-Fock solution
       IMPLICIT NONE
@@ -23,7 +23,8 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
 !AZ 8/23
       DOUBLE PRECISION, ALLOCATABLE :: SABMO(:,:)
       DOUBLE PRECISION :: SSIJ,S2
-      DOUBLE PRECISION :: CupOld(NB,NB), CdownOld(NB,NB) !for MOM 3/28/25
+      DOUBLE PRECISION :: CupOld(NB,NB), CdownOld(NB,NB)
+      DOUBLE PRECISION, OPTIONAL, INTENT(IN):: Cref1(NB,NB),Cref2(NB,NB) !for MOM 3/28/25
       LOGICAL :: BSURHF !momflag 
 !AZ 8/23      
 
@@ -114,6 +115,9 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                         DO M=1,Neup
                                 Cup(:,M) = C1(:,M)
                         ENDDO
+                       
+                        print*,'AM I IN ZEROSCF' !AZ
+ 
                         Cdown(:,:) = 0.0d0
                         DO M=1,Nedown
                                 Cdown(:,M) = C2(:,M)
@@ -129,15 +133,23 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
       !=====================================================================
       
       DO WHILE ( (DABS(DE) .GT. Tol .AND. I .LE. MAXITER) .OR. ( DELTAP .GT. sqrt(Tol) .AND. I .LE. MAXITER) )
+!AZ its erasing cup?? 
+!AZ 3/30
+!                        if(I.eq.1.and.BSURHF.eqv..true.) CupOld=Cup
+!                        print*,'IM IN URHF'
+!AZ
                 IF ( ETEMP .LE. 0.0d0 ) THEN
+                        
                         Cup(:,:) = 0.0d0
-                        DO M=1,Neup
-                                Cup(:,M) = C1(:,M)
+                        DO M=1,Neup 
+                          Cup(:,M) = C1(:,M)
+
                         ENDDO
 
                         Cdown(:,:) = 0.0d0
-                        DO M=1,Nedown
-                                Cdown(:,M) = C2(:,M)
+                        DO M=1,Nedown 
+                           Cdown(:,M) = C2(:,M)
+
                         ENDDO
                 ELSE
                         Cup = C1
@@ -151,22 +163,29 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                 ! XL-BOMD scheme and not the coefficient matrices Cup and Cdown
                 ! Therefor we have the if-construct here.
                 !==============================================================
+               
 
                 IF ( I .GT. 0 ) THEN
                         IF ( ETEMP .LE. 0.0d0 ) THEN
                                 if(BSURHF) then
                                   if(I.eq.1) then
                                   !AZ 3/29 hard code imom
-                                  cupold = cup
+                                  !cupold = cup
                                   !cdownold = cdown 
-                                  cupOld(:,1) =  cupOld(:,1)*0.5d0
+                                  !cupOld(:,1) =  cupOld(:,1)*0.5d0
                                   !cdownOld(:,1) =  cdownOld(:,1)*0.5d0 
-                                  cup=cup*.9
+                                  !cup=cup*.9
                                   !cdown=cdown*.9 
                                   endif 
                                   if(I.ge.1) then 
-                                  call mom(Cup,CupOld,S,NB,Neup,Pup,1)
-                                  !call mom(Cdown,CdownOld,S,NB,Nedown,Pdown,2)
+                                  !cref is full c from job1
+                                  !c1 is the full current c 
+                                  call mom(C1,Cref1,S,NB,Neup,1) !C1=full 
+                                  DO M=1,Neup
+                                    Cup(:,M) = C1(:,M) !
+                                  ENDDO
+                                  CALL makedens(Cup,NB,Pup)
+                                  !call mom(Cdown,Cref2,S,NB,Nedown,2) 
                                   CALL makedens(Cdown,NB,Pdown)
                                   endif 
                                 else 
@@ -264,7 +283,7 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
 
                 CALL diaghHF( Fup,S,NB,EHFeigenup,C1,INFO1)
                 CALL diaghHF( Fdown,S,NB,EHFeigendown,C2,INFO2)
-
+ 
                 !----------------------------------------------------------------------------------
                 ! Here we do a level shift of the LUMO -states in order to try and accelerate the
                 ! convergence of the scf calculation. See Theoret. Chim. Acta. 46, 325-329 (1977).

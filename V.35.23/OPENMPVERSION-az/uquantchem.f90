@@ -33,6 +33,9 @@ PROGRAM uquantchem
       LOGICAL :: RESTART,ZEROSCF,XLBOMD,DFTC,DOTDFT,ADEF,DOABSSPECTRUM,DIFFDENS,AFORCE,RIAPPROX,SCRATCH,DIAGDG,FIELDREAD
       INTEGER :: NSCCORR,LIMPRECALC,DKHORDER
       DOUBLE PRECISION :: MIXTDDFT,SCERR,FIELDDIR(3),TRANSCOORD(3,3),cosTH,sinTH,cosFI,sinFI,RIKTNING(3)
+!AZ 3/30/25
+      DOUBLE PRECISION, ALLOCATABLE :: Cref1(:,:),Cref2(:,:) !for imom
+!AZ 3/30/25 
       !-------------------
       !STARTING THE CLOCK: 
       !-------------------
@@ -841,6 +844,7 @@ PROGRAM uquantchem
 !AZ        IF ( CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
          IF (CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'toEP2' .OR. CORRLEVEL .EQ. 'gcEP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' .OR. CORRLEVEL .EQ. 'URHF' .OR. CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN                
                 ALLOCATE(EHFeigenup(NB),EHFeigendown(NB),Cup(NB,NB),Cdown(NB,NB),P(NB,NB),C1(NB,NB),C2(NB,NB),Pgup(NB,NB),Pgdown(NB,NB))
+                ALLOCATE(Cref1(NB,NB),Cref2(NB,NB)) !AZ for imom
                 ALLOCATE(Cupc(NB,NB),Cdownc(NB,NB),Pupc(NB,NB),Pdownc(NB,NB),Pupp(NB,NB),Pdownn(NB,NB))
                 
                 IF ( .not. RESTRICT .OR. CORRLEVEL .EQ. 'DQMC' .OR. CORRLEVEL .EQ. 'VMC' .OR. DFTC ) THEN
@@ -853,9 +857,16 @@ PROGRAM uquantchem
                                 &,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
 !AZ call again
                                 BSURHF=.true.
-                                Cup(:,1) = Cup(:,1)*0.5d0 
+                                
+!copy whole Cup and Cdown since only the occslices are used in urhf
+!will reorder in momscf 
+                                CRef1 = Cup !whole Calpha
+                                Cref2 = Cdown !whole Cbeta
                                 CALL URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE.,SCRATCH,.FALSE. &
-                                &,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
+                                &,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX,CRef1,Cref2)
+
+!                               print*,'Cref alpha after mom'
+!                               call print_matrix_full_real(6,Cref1,NB,NB) 
 !AZ
                                 IF ( DOTDFT ) THEN
                                         ETEMPE = ETEMP
