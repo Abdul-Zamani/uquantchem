@@ -12,13 +12,11 @@ SUBROUTINE mom(COEFF,COEFFold,SAO,NB,NOcc,spin)
 
 
     tempmat2 = COEFFold
-    tempmat2(:,1)= tempmat2(:,1)*0.5d0 
+    if(spin.eq.1) tempmat2(:,1)= tempmat2(:,1)*0.5d0 
 
     do i=1, NB
-!      write(*,'(A,1x,F10.4,1x,A,1x,F10.4)')&
-!      'Cold',COEFFold(i,1),'C', COEFF(i,1)
-      write(*,'(A,1x,F10.4,1x,A,1x,F10.4)')&
-      'Cold',tempmat2(i,1),'C', COEFF(i,1)
+!!!      write(*,'(A,1x,F10.4,1x,A,1x,F10.4)')&
+!!!      'Cold',tempmat2(i,1),'C', COEFF(i,1)
     enddo 
 
     s=0.0d0 
@@ -31,6 +29,7 @@ SUBROUTINE mom(COEFF,COEFFold,SAO,NB,NOcc,spin)
      do j=1,nB 
        s(j) = 0.0d0 
        do i=1,nocc
+       !s(j) = s(j) + (O(i,j))
        s(j) = s(j) + (O(i,j))**2.0d0  
        enddo
      enddo 
@@ -86,6 +85,7 @@ SUBROUTINE mom(COEFF,COEFFold,SAO,NB,NOcc,spin)
   do i=1, NB
    tempMat(:, i) = COEFF(:,sorted_indices(i))
    if(sorted_indices(i).eq.1.and.spin.eq.1) then
+   tempidx = i 
    print*,'tom is idx and sort idx',i,sorted_indices(i)
    tempMat(:,i) = COEFF(:,sorted_indices(i))*0.5d0 
    endif 
@@ -97,13 +97,10 @@ SUBROUTINE mom(COEFF,COEFFold,SAO,NB,NOcc,spin)
 !!  COEFF=tempMat
 
   !find tom 
-!  print*,'tom sorted index #',tempidx
-!!  coeff(:,tempidx) = coeff(:,tempidx)*0.5d0 
-!! COEFF(:,1) =COEFF(:,1)*0.5 !this works, why not inside ^ 
+  print*,'tom sorted index #',tempidx
     do i=1, NB
-!!      write(*,'(A,1x,F10.4)')&
-!      'newCtom', coeff(i,tempidx)
-!!      'newCtom', tempmat(i,tempidx)
+!!!      write(*,'(A,1x,F10.4)')&
+!!!      'C(:,tom)', tempmat(i,tempidx)
     enddo
 
 

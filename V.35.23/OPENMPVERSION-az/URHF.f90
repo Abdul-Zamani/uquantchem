@@ -178,6 +178,9 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                                   !cdown=cdown*.9 
                                   endif 
                                   if(I.ge.1) then 
+                                  print*,''
+                                  print*,'Enter Alpha IMOM'
+                                  print*,''
                                   !cref is full c from job1
                                   !c1 is the full current c 
                                   call mom(C1,Cref1,S,NB,Neup,1) !C1=full 
@@ -185,8 +188,15 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                                     Cup(:,M) = C1(:,M) !
                                   ENDDO
                                   CALL makedens(Cup,NB,Pup)
-                                  !call mom(Cdown,Cref2,S,NB,Nedown,2) 
+                                  print*,''
+                                  print*,'Enter Beta IMOM'
+                                  print*,''
+                                  call mom(Cdown,Cref2,S,NB,Nedown,2) 
+                                  DO M=1,Nedown
+                                    Cdown(:,M) = C2(:,M) !
+                                  ENDDO
                                   CALL makedens(Cdown,NB,Pdown)
+
                                   endif 
                                 else 
                                 CALL makedens(Cup,NB,Pup)
