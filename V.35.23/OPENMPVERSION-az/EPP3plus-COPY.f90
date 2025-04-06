@@ -2,9 +2,6 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
       ! 
       !
 
-!
-      USE omp_lib
-!
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: NB,Ne,MULTIPLICITY
@@ -76,111 +73,87 @@ SUBROUTINE EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,E0
 
 !MO ints
 !!      print*,'   AA   '        
-     tempInts1=0.0d0 
-     tempInts2=0.0d0
-     tempInts3=0.0d0
-     moInts = 0.0d0
+      tempInts1=0.0d0 
+      tempInts2=0.0d0
+      tempInts3=0.0d0
+      moInts = 0.0d0
+      do i=1, nb
+        do mu=1, nb
+          tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
+          (Cup(mu,i)*Ints(mu,:,:,:))
+        enddo 
+        do j=1, nb
+          do nu=1, nb
+            tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
+            (Cup(nu,j)*tempInts1(i,nu,:,:))
+           enddo
+          do k=1, nb
+            do lam=1, nb
+              tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
+              (Cup(lam,k)*tempInts2(i,j,lam,:))
+            enddo
+            do l=1, nb
+              do sig=1, nb
+                MOInts(i,j,k,l) = MOInts(i,j,k,l) + &
+                (Cup(sig,l)*tempInts3(i,j,k,sig))
+              enddo      
+            enddo!end i            
+          enddo!end j     
+        enddo!end k         
+      enddo!end l   
 
-!AZ
-      !$OMP PARALLEL SHARED(nb,MOInts,Cup,tempInts1,tempInts2,tempInts3) &
-      !$OMP & PRIVATE(i,j,k,l,mu,nu,lam,sig)
-!
-      Write(*,*) 'Hello'
-      Write(*,*) omp_get_num_threads()
-!
-
-!AZ
-
-!$OMP DO
-do i=1, nb
-  do mu=1, nb
-    tempInts1(i,:,:,:) = tempInts1(i,:,:,:) + &
-    (Cup(mu,i)*Ints(mu,:,:,:))
-  enddo
-enddo
-!$OMP END DO
-
-! Add a barrier here to synchronize threads before continuing
-!$OMP BARRIER
-
-!$OMP DO
-do i=1, nb
-  do j=1, nb
-    do nu=1, nb
-      tempInts2(i,j,:,:) = tempInts2(i,j,:,:) + &
-      (Cup(nu,j)*tempInts1(i,nu,:,:))
-    enddo
-  enddo
-enddo
-!$OMP END DO
-
-! Add another barrier here
-!$OMP BARRIER
-
-!$OMP DO
-do i=1, nb
-  do j=1, nb
-    do k=1, nb
-      do lam=1, nb
-        tempInts3(i,j,k,:) = tempInts3(i,j,k,:) + &
-        (Cup(lam,k)*tempInts2(i,j,lam,:))
-      enddo
-      do l=1, nb
-        do sig=1, nb
-          MOInts(i,j,k,l) = MOInts(i,j,k,l) + &
-          (Cup(sig,l)*tempInts3(i,j,k,sig))
+      !spin integration 
+      do i=1,(nb*2) 
+        do j=1,(nb*2) 
+          do k=1,(nb*2) 
+            do l=1,(nb*2) 
+              if( (mod(l,2).eq.mod(j,2)).and.(mod(i,2).eq.mod(k,2)) ) then
+!              X1 = MOInts(int((i+1)/2),int((k+1)/2),int((j+1)/2),int((l+1)/2))
+              else
+!              X1 = 0.0d0
+              endif
+              if( (mod(i,2).eq.mod(l,2)).and.(mod(j,2).eq.mod(k,2)) ) then
+!              X2 = MOInts(int((i+1)/2),int((l+1)/2),int((j+1)/2),int((k+1)/2))
+              else
+!              X2 = 0.0d0
+              endif
+!              tei(i,k,j,l) = X1-X2 !ijkl - ijlk
+            enddo
+          enddo 
         enddo
-      enddo!end i            
-    enddo!end j     
-  enddo!end k         
-enddo!end l   
-
-!$OMP END DO
-!$OMP END PARALLEL
+     enddo 
 
 !spin-basis double bar integrals <12||12>
 
 !11/17 this seems to work
 
-!$OMP PARALLEL SHARED(nb,MOInts,tei) &
-!$OMP & PRIVATE(p,q,r,s)
+      do s=1, nB*2
+        do r=1, nB*2
+          do q=1, nB*2
+            do p=1, nB*2
+              !(pq|rs)
+              tei(p,q,r,s) = & !int-->floor division
+            ( MOInts(int((p+1)/2),int((r+1)/2),&
+              int((q+1)/2),int((s+1)/2))*&
+              (kronecker(mod((p),2),mod((r),2)))*& !p r
+              (kronecker(mod((q),2),mod((s),2))) ) -& ! q s 
+              !(pq|sr)
+            ( MOInts(int((p+1)/2),int((s+1)/2),&
+              int((q+1)/2),int((r+1)/2))*&
+              (kronecker(mod((p),2),mod((s),2)))*& ! p s
+              (kronecker(mod((q),2),mod((r),2))) )! q r 
 
-!$OMP DO
-do s=1, nB*2
-  do r=1, nB*2
-    do q=1, nB*2
-      do p=1, nB*2
-        !(pq|rs)
-        tei(p,q,r,s) = & !int-->floor division
-        ( MOInts(int((p+1)/2),int((r+1)/2),&
-          int((q+1)/2),int((s+1)/2))*&
-          (kronecker(mod((p),2),mod((r),2)))*& !p r
-          (kronecker(mod((q),2),mod((s),2))) ) -& ! q s 
-        !(pq|sr)
-        ( MOInts(int((p+1)/2),int((s+1)/2),&
-          int((q+1)/2),int((r+1)/2))*&
-          (kronecker(mod((p),2),mod((s),2)))*& ! p s
-          (kronecker(mod((q),2),mod((r),2))) )! q r 
+                !Test Print
+                !print*,'pqrs',p,q,r,s
+                !print*,' (kronecker(mod((p),2),mod((r),2)))',&
+                !         (kronecker(mod((p),2),mod((r),2)))
+                !print*,' (kronecker(mod((q),2),mod((s),2)))',&
+                !         (kronecker(mod((q),2),mod((s),2)))
 
-        !Test Print
-        !print*,'pqrs',p,q,r,s
-        !print*,' (kronecker(mod((p),2),mod((r),2)))',&
-        !         (kronecker(mod((p),2),mod((r),2)))
-        !print*,' (kronecker(mod((q),2),mod((s),2)))',&
-        !         (kronecker(mod((q),2),mod((s),2)))
-
+            enddo
+          enddo
+        enddo
       enddo
-    enddo
-  enddo
-enddo
-!$OMP END DO
-
-! Add a barrier to synchronize threads before ending the parallel region
-!$OMP BARRIER
-
-! End the parallel region
-!$OMP END PARALLEL
-
 
      print*,'   Tran.Done.   '        
 

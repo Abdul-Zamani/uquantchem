@@ -15,7 +15,7 @@ PROGRAM uquantchem
       CHARACTER(Len=20) :: date,time,zone
       INTEGER :: NLINES,I,J,K,L,M,NB,NBAUX,Ne,MULTIPLICITY,Lmax,LmaxAUX,MESH(3),NVMC,IOSA,FNATOMS,NSTEPS,NLSPOINTS,PORDER,ZEROSCFTYPE
       INTEGER*8 :: NRED,FNRED
-      LOGICAL :: finns,WRITECICOEF,WRITEDENS,WHOMOLUMO,LEXCSP,SPINCONSERVE,RESTRICT,APPROXEE,HYBRID,USEGTO,CORRALCUSP,VMCCALC,HFORBWRITE,CFORCE,RELAXN,WRITEONFLY,MOVIE,MOLDYN,BSURHF
+      LOGICAL :: finns,WRITECICOEF,WRITEDENS,WHOMOLUMO,LEXCSP,SPINCONSERVE,RESTRICT,APPROXEE,HYBRID,USEGTO,CORRALCUSP,VMCCALC,HFORBWRITE,CFORCE,RELAXN,WRITEONFLY,MOVIE,MOLDYN,BSURHF,ANGtoAU
       DOUBLE PRECISION, ALLOCATABLE :: S(:,:),T(:,:),V(:,:),H0(:,:),Intsv(:),EIGENVECT(:,:),Ints(:,:,:,:),gradIntsv(:,:,:),SINV(:,:),DMAT(:,:),GVG(:,:)
       DOUBLE PRECISION, ALLOCATABLE :: gradS(:,:,:,:),gradT(:,:,:,:),gradV(:,:,:,:),PEXu(:,:,:),PEXd(:,:,:),PEXuu(:,:,:),PEXdd(:,:,:),Pupp(:,:),Pdownn(:,:)
       DOUBLE PRECISION, ALLOCATABLE :: EHFeigenup(:),EHFeigendown(:),Cup(:,:),Cdown(:,:),H00(:,:),DPTENSOR(:,:,:),DIPOLET(:,:),WRI(:,:,:),gradWRI(:,:,:,:,:)
@@ -65,7 +65,23 @@ PROGRAM uquantchem
       & SAMPLERATE,NREPLICAS,TIMESTEP,TEND,TSTART,BETA,BJASTROW,CJASTROW,NPERSIST,NRECALC,CUTTOFFFACTOR,MIX,DIISORD,DIISSTART,HYBRID,rc,CORRALCUSP,NVMC,HFORBWRITE, &
       & IOSA,CFORCE,RELAXN,NSTEPS,DR,FTol,NLSPOINTS,PORDER,WRITEONFLY,MOVIE,MOLDYN,TEMPERATURE,ZEROSCF,XLBOMD,kappa,alpha,DORDER,PULAY,FIXNSCF,NLEBEDEV,NCHEBGAUSS, &
       & EETOL,RELALGO,ZEROSCFTYPE,ETEMP,IORBNR,AORBS,DIISORDEX,DOTDFT,OMEGA,EDIR,NEPERIOD,EPROFILE,EFIELDMAX,ADEF,DOABSSPECTRUM,DIFFDENS,AFORCE,DRF,&
-      & NSCCORR,MIXTDDFT,SCERR,RIAPPROX,LIMPRECALC,DIAGDG,FIELDDIR,FIELDREAD,DAMPING,DKHORDER)
+      & NSCCORR,MIXTDDFT,SCERR,RIAPPROX,LIMPRECALC,DIAGDG,FIELDDIR,FIELDREAD,DAMPING,DKHORDER,ANGtoAU)
+
+!AZ 4/1/25
+!Convert Bohr to Angstrom if ANGtoAU is true
+!https://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0
+      IF(ANGtoAU) then
+      print*,'Converting xyz from ANG TO AU'
+      DO I=1,NATOMS
+        APOS(I,:) = APOS(I,:)/0.529177210544d0 
+      ENDDO 
+      DO I=1,NATOMS
+          write(*,*),APOS(I,1),APOS(I,2),APOS(I,3)
+      ENDDO 
+
+      print*,ATOMICNUMBERS
+      ENDIF 
+!AZ 4/1/25
 
       !=======================================================================
       ! If the direction of the electric field has been set explicitly by the
@@ -856,14 +872,14 @@ PROGRAM uquantchem
                                 CALL URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE.,SCRATCH,.FALSE. &
                                 &,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
 !AZ call again
-                                BSURHF=.true.
+                                BSURHF=.false.!.true.
                                 
 !copy whole Cup and Cdown since only the occslices are used in urhf
 !will reorder in momscf 
-                                CRef1 = Cup !whole Calpha
-                                Cref2 = Cdown !whole Cbeta
-                                CALL URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE.,SCRATCH,.FALSE. &
-                                &,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX,CRef1,Cref2)
+!                                CRef1 = Cup !whole Calpha
+!                                Cref2 = Cdown !whole Cbeta
+!                                CALL URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE.,SCRATCH,.FALSE. &
+!                                &,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX,CRef1,Cref2)
 
 !                               print*,'Cref alpha after mom'
 !                               call print_matrix_full_real(6,Cref1,NB,NB) 
