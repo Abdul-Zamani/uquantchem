@@ -22,11 +22,19 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
       LOGICAL :: STARTPRINTDIISIFO
 !AZ 8/23
       DOUBLE PRECISION, ALLOCATABLE :: SABMO(:,:)
-      DOUBLE PRECISION :: SSIJ,S2
-      DOUBLE PRECISION :: CupOld(NB,NB), CdownOld(NB,NB)
+      DOUBLE PRECISION :: SSIJ,S2,temp 
+      DOUBLE PRECISION :: CupOld(NB,NB), CdownOld(NB,NB), tempMat(NB,NB)
+      DOUBLE PRECISION, ALLOCATABLE  :: Foo(:,:), Fvv(:,:) !AZ 6/6/25 rhf Fmo
+      DOUBLE PRECISION, ALLOCATABLE  :: Fup2(:,:), Fdown2(:,:) !AZ 6/6/25 save orthog F
+      DOUBLE PRECISION, ALLOCATABLE  :: Coo(:,:), Cvv(:,:), eoo(:),evv(:) !AZ 6/6/25 semicanon eigen
       DOUBLE PRECISION, OPTIONAL, INTENT(IN):: Cref1(NB,NB),Cref2(NB,NB) !for MOM 3/28/25
       LOGICAL :: BSURHF !momflag 
 !AZ 8/23      
+
+!AZ 6/5/25 Check if previous evec/eval from converged scf are passed
+     write(*,*)'Density upon entering'
+!     call print_matrix_full_real(6,PUP,NB,NB)
+!AZ 6/5/25
 
       MIXING  = MIX(1)
       shift = MIX(2)
@@ -100,6 +108,7 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
       ! This is used for the zero scf cycle (FAST-MD)
       !=======================================================
       IF ( ZEROSCF ) THEN
+                print*,'AM I IN ZEROSCF' !AZ
                 PT = Pup + Pdown
                 CALL getJv(Pup,NB,NBAUX,NRED,Intsv,VRI,WRI,RIAPPROX,Jup)
                 CALL getJv(Pdown,NB,NBAUX,NRED,Intsv,VRI,WRI,RIAPPROX,Jdown)
@@ -107,27 +116,93 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                 CALL getKv(Pdown,NB,NBAUX,NRED,Intsv,VRI,WRI,RIAPPROX,Kdown)
                 Fup   = H0 + Jdown - Kup   + Jup
                 Fdown = H0 + Jdown - Kdown + Jup
-                CALL diaghHF( Fup,S,NB,EHFeigenup,C1,INFO1)
-                CALL diaghHF( Fdown,S,NB,EHFeigendown,C2,INFO2)
-                !ETOT = 0.50d0*(SUM(H0*PT) + SUM(Fup*Pup) + SUM(Fdown*Pdown) ) + nucE
-                IF ( ETEMP .LT. 0.0d0 ) THEN
-                        Cup(:,:) = 0.0d0
+!AZ 6/5/25 must orthog+semicanon here, F is not diag after 2J-K build
+!                allocate(Fup2(NB,NB),Fdown2(NB,NB))
+                allocate(Foo(Neup,Neup),Fvv((NB-Neup),(NB-Neup)))
+                allocate(Coo(neup,neup), Cvv((NB-Neup),(NB-Neup))) 
+                allocate(eoo(Neup),evv(NB-Neup))
+!                Fup2 = MATMUL(SH,MATMUL(Fup,SH)) !AZ orthog F
+!                Fdown2 = Fup2
+                print*,'Print Cup before 1 shot HF'
+                 call print_matrix_full_real(6,Cup,NB,NB)!AZ F before diag zeroscf
+!                call print_matrix_full_real(6,S,NB,NB)!AZ F before diag zeroscf
+!6/5/25                                                !
+!AZ                CALL diaghHF( Fup,S,NB,EHFeigenup,C1,INFO1)
+!AZ                CALL diaghHF( Fdown,S,NB,EHFeigendown,C2,INFO2)
+!AZ 6/5/25  
+!AZ                CALL diagh(Fup2,NB,EHFeigenup,C1)
+!AZ                CALL diagh(Fdown2,NB,EHFeigendown,C2)
+
+                !back rotated C': C=SH*C' 
+                !CoccT * F * Cocc
+!                Cup   = matmul(SH,Cup)
+!                Cdown = matmul(SH,Cdown) 
+                Foo = matmul(transpose(Cup(:,1:Neup)),matmul(Fup,Cup(:,1:Neup)))                
+                Fvv = matmul(transpose(Cup(:,(Neup+1):NB)),matmul(Fup,Cup(:,(Neup+1):NB)))                
+                call print_matrix_full_real(6,Foo,Neup,Neup)
+                print*,'shape of Foo',shape(Foo)
+                !AZ now gotta get semicanon eigs
+                CALL diagh(Foo,Neup,eoo,coo)
+                CALL diagh(Fvv,(NB-(Neup)),evv,cvv)
+                print*,'eoo'  
+                do i=1,Neup
+                  print*,eoo(i)
+                enddo
+                print*,'vv'
+                do i=1,NB-Neup
+                  print*,evv(i)
+                enddo 
+               !do Cdft * Coo
+               !AZ something wrong here 6/6, degen poles arent showing degen D2 
+               print*,'Before copying KS Cocc * semiHF Vocc'
+               Cup(:,1:Neup) = matmul(Cup(:,1:Neup),coo)!AZ fill with c*coo 
+               Cup(:,(Neup+1):NB) = matmul(Cup(:,(Neup+1):NB),cvv)!AZ fill with c*cvv 
+               Cdown = Cup 
+               EHFeigenup(1:Neup) = eoo(1:Neup) 
+               EHFeigenup((Neup+1):NB) = evv(1:(NB-Neup)) 
+               EHFeigendown = EHFeigenup
+                print*,'EHFeigenup'
+                do i=1,NB
+                  print*,EHFeigenup(i)
+                enddo
+!AZ 6/5/25 
+                ETOT = 0.50d0*(SUM(H0*PT) + SUM(Fup*Pup) + SUM(Fdown*Pdown) ) + nucE !AZ !-out by default
+                print*,'ETOT IN ZEROSCF',ETOT !AZ Print 1 shot etot
+                !below should fill up on-top Cup and Cdown
+                IF ( ETEMP .LT. 0.0d0) THEN 
+!AZ stop it from filling just Cocc
+!AZ                        Cup(:,:) = 0.0d0
                         DO M=1,Neup
-                                Cup(:,M) = C1(:,M)
+!AZ                                Cup(:,M) = C1(:,M)
                         ENDDO
-                       
-                        print*,'AM I IN ZEROSCF' !AZ
  
-                        Cdown(:,:) = 0.0d0
+!AZ                        Cdown(:,:) = 0.0d0
                         DO M=1,Nedown
-                                Cdown(:,M) = C2(:,M)
+!AZ                                Cdown(:,M) = C2(:,M)
                         ENDDO
+                        !AZ um dont need if 1 shot
+!AZ                        Cup   = C1
+!AZ                        Cdown = C2
+                        !AZ
                         CALL makedens(Cup,NB,Pup)
                         CALL makedens(Cdown,NB,Pdown)
                 ELSE
                         CALL makedensT(TOLDNe,Cup,Cdown,EHFeigenup,EHFeigendown,ETEMP,NB,Ne,Pup,Pdown,mu,ENTROPY)
                 ENDIF
                 NSCF = 0
+                print*,'Fock Matrix in ZEROSCF'!AZ
+                !tempMat = 0.0d0 
+                !S^-1/2 F S^-1/2
+!                tempMat = MATMUL(SH,MATMUL(Fup,SH))
+!                call print_matrix_full_real(6,tempMat,NB,NB)!AZ
+                temp = 0.0d0
+                tempMat = 0.0d0 
+                tempMat = (matmul(matmul(transpose(Cup),S),Cup)) !AZ check if CSC=1 
+                do i=1,neup !AZ
+                  temp = temp + tempMat(i,i) !AZ
+                enddo !AZ
+                print*,'sum(C^T S C) = ',temp
+                print*,'EXITING ZEROSCF' !AZ
                 RETURN
       ENDIF
       !=====================================================================

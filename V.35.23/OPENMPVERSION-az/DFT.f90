@@ -120,7 +120,7 @@ SUBROUTINE DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,N
                         Cdown = C2
                         CALL makedensT(TOLDNe,Cup,Cdown,EHFeigenup,EHFeigendown,ETEMP,NB,Ne,Pup,Pdown,mu,ENTROPY)
                 ENDIF
-                NSCF = 0
+                NSCF = 0 
                 RETURN
       ENDIF
       !=====================================================================

@@ -46,7 +46,7 @@ PROGRAM uquantchem
 
       call DATE_AND_TIME(date, time, zone,STARTTIME)
      
-      DFTC = .FALSE.
+      DFTC = .FALSE. 
 
       autoev = 27.211383860d0
       !=======================================================================
@@ -942,6 +942,19 @@ PROGRAM uquantchem
                                 ENDIF
                                 CALL PRINTENERGYEIGENVAL(BAS,EHFeigenup,EHFeigendown,Cup,Cdown,.FALSE.)
                                 CALL PRINTDIPOLETENSOR(BAS,Cup,Cdown)
+                                !AZ 6/5/25 do DFT-SCF 1 cycle of HF
+                                print*,'S after DFT' 
+                                call print_matrix_full_real(6,S,NB,NB)!AZ S after dft 
+                                print*,'ONE SHOT HF AFTER DFT'
+                                BSURHF = .false.
+                                print*,'DFTC',DFTC
+                                CALL URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,&
+                                          EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,&
+                                          DIISSTART,NSCF,2,.TRUE.,SCRATCH,.TRUE.,& !FIXNSCF=2 for MAXITER=1, ZEROSCF is after SCRATCH
+                                          ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
+                                print*,'NSCF right after URHF one shot',NSCF 
+                                print*,'RIGHT AFTER CALL URHF FOR 1 CYCLE'
+                                !AZ 6/5/25
                         ENDIF
                         
                         IF ( NATOMS .GT. 1 ) CALL mulliken(NATOMS,ATOMS,BAS,Pup+Pdown,S,ZMUL)
@@ -1076,7 +1089,7 @@ PROGRAM uquantchem
                 ENDIF
                 
 !AZ8/25                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' ) THEN
-                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'toEP2' .OR. CORRLEVEL .EQ. 'gcEP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' ) THEN
+                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'toEP2' .OR. CORRLEVEL .EQ. 'gcEP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' .OR. CORRLEVEL .EQ. 'B3LYP') THEN
                         !print*,'========================================================'
                         !print*,'  Tranfering (ij|kl) from vector to tensor form         '
                         !print*,'========================================================'
@@ -1105,6 +1118,25 @@ PROGRAM uquantchem
                                              ETOT-nucE,nuce,SPINCONSERVE)
                 IF ( CORRLEVEL .EQ. 'EP2so'  ) CALL EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
+
+                PRINT*,'size Cup,Cdown',size(Cup),size(Cdown) 
+                PRINT*,'szie eigup,eigdown',size(EHFeigenup),size(EHFeigendown) 
+                PRINT*,'size int',size(Ints) 
+                !PRINT*,'Cup(1,1)',Cup(1,1)
+                !PRINT*,'Cdown(1,1)',Cdown(1,1)
+                !PRINT*,'EHFeigenup(1,1)',EHFeigenup(1)
+                !PRINT*,'EHFeigendown(1,1)',EHFeigendown(1)
+                !PRINT*,'EHFeigenup'
+                !DO I=1,nB
+                !  PRINT*,EHFeigenup(I)
+                !ENDDO 
+                !call print_matrix_full_real(6,CUP,NB,NB)
+                !PRINT*,'Ints(1,1,1,1)',Ints(1,1,1,1) 
+                PRINT*,'If doing HF-on-top-DFT, must semicanon Fockian'
+                IF ( CORRLEVEL .EQ. 'B3LYP'  ) CALL EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+                                             ETOT-nucE,nuce,SPINCONSERVE)
+
+
                 IF ( CORRLEVEL .EQ. 'EP3so'  ) CALL EP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
                 IF ( CORRLEVEL .EQ. 'EPL3so'  ) CALL EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
