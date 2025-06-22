@@ -228,13 +228,13 @@ SUBROUTINE moleculardynamics(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,M
 
                         IF ( CORRLEVEL .EQ. 'PBE' .OR. CORRLEVEL .EQ. 'LDA' .OR.  CORRLEVEL .EQ. 'B3LYP' ) THEN
                                 IF ( IORBNR(1) .EQ. 0 ) THEN
-                                        CALL DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
+                                        CALL DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
                                         & ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.,ETEMP,mu,ENTROPY,NBAUX,VRI,WRI,RIAPPROXX)
                                 ENDIF
                                 IF ( IORBNR(1) .NE. 0 ) THEN
                                         IF ( SCRATCH ) THEN
                                                 CALL DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,&
-                                                & NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
+                                                & NRED,Ne,MULTIPLICITY,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
                                                 & ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.,ETEMP,mu,ENTROPY,NBAUX,VRI,WRI,RIAPPROXX)
                                         ENDIF
                                         CALL DFTCHI(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
@@ -473,7 +473,7 @@ SUBROUTINE moleculardynamics(gradS,gradT,gradV,gradIntsv,S,H0,Intsv,NB,NRED,Ne,M
                  IF ( CORRLEVEL .EQ. 'PBE' .OR. CORRLEVEL .EQ. 'LDA' .OR.  CORRLEVEL .EQ. 'B3LYP' ) THEN
                         IF ( ZEROSCFTYPE .EQ. 1  ) THEN
                                 IF ( FIXNSCFF .NE. -1 ) DIISORDD = 0 ! The DIIS-mxing is only good for the first iteration when doing DFT
-                                CALL DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
+                                CALL DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
                                 & ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORDD,DIISSTART,NSCF,FIXNSCFF,.FALSE.,SCRATCH,ZEROSCFF,ETEMP,mu,ENTROPY,NBAUX,VRI,WRI,RIAPPROXX)
                         ELSE IF ( ZEROSCFTYPE .EQ. 2  ) THEN
                                 IF ( FIXNSCFF .NE. -1 ) DIISORDD = 0 ! The DIIS-mxing is only good for the first iteration when doing DFT

@@ -82,7 +82,7 @@ SUBROUTINE RHF(S,H0,Intsv,NB,NRED,Ne,nucE,Tol,EHFeigen,ETOT,C,P,MIX,DIISORD,DIIS
       !=======================================================
 
       DO WHILE ( (DABS(DE) .GT. Tol .AND. I .LE. MAXITER) .OR. ( DELTAP .GT. sqrt(Tol) .AND. I .LE. MAXITER) )
-
+               
                 C2(:,:) = 0.0d0
                 DO M=1,N
                         C2(:,M) = C(:,M)

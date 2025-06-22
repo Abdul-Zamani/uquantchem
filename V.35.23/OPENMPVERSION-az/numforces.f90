@@ -130,7 +130,7 @@ SUBROUTINE numforce(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,Tol,FTol,MIX,DIISO
                                         CALL URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EHFeigendown,&
                                         & ETOT,Cup,Cdown,Pup0,Pdown0,MIX,DIISORDD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.,ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
                                 ELSE IF ( CORRLEVEL .EQ. 'PBE' .OR. CORRLEVEL .EQ. 'LDA' .OR. CORRLEVEL .EQ. 'B3LYP' ) THEN
-                                        CALL DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
+                                        CALL DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
                                         & ETOT,Cup,Cdown,Pup0,Pdown0,MIX,DIISORDD,DIISSTART,NSCF,-1,.FALSE.,SCRATCH,.FALSE.,ETEMP,mu,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
                                 ENDIF
 

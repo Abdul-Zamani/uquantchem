@@ -305,6 +305,7 @@ enddo
 
 !
        print*,'ENTER 3rd Order (OPENMPVERSION IP and EA AZ 5/15/24)'
+       print*,'ENTER 3rd Order (WARNING DOUBLE CHECK IPs AZ 6/18/25)'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!! BEGIN 3rd Order
 

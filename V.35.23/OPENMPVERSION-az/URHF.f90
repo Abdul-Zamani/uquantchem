@@ -32,7 +32,7 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
 !AZ 8/23      
 
 !AZ 6/5/25 Check if previous evec/eval from converged scf are passed
-     write(*,*)'Density upon entering'
+#     write(*,*)'Density upon entering'
 !     call print_matrix_full_real(6,PUP,NB,NB)
 !AZ 6/5/25
 
@@ -123,8 +123,8 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                 allocate(eoo(Neup),evv(NB-Neup))
 !                Fup2 = MATMUL(SH,MATMUL(Fup,SH)) !AZ orthog F
 !                Fdown2 = Fup2
-                print*,'Print Cup before 1 shot HF'
-                 call print_matrix_full_real(6,Cup,NB,NB)!AZ F before diag zeroscf
+!                print*,'Print Cup before 1 shot HF'
+!                 call print_matrix_full_real(6,Cup,NB,NB)!AZ F before diag zeroscf
 !                call print_matrix_full_real(6,S,NB,NB)!AZ F before diag zeroscf
 !6/5/25                                                !
 !AZ                CALL diaghHF( Fup,S,NB,EHFeigenup,C1,INFO1)
@@ -136,7 +136,8 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                 !back rotated C': C=SH*C' 
                 !CoccT * F * Cocc
 !                Cup   = matmul(SH,Cup)
-!                Cdown = matmul(SH,Cdown) 
+!                Cdown = matmul(SH,Cdown)
+!AZ ov vo blocks  
                 Foo = matmul(transpose(Cup(:,1:Neup)),matmul(Fup,Cup(:,1:Neup)))                
                 Fvv = matmul(transpose(Cup(:,(Neup+1):NB)),matmul(Fup,Cup(:,(Neup+1):NB)))                
                 call print_matrix_full_real(6,Foo,Neup,Neup)
@@ -155,12 +156,17 @@ SUBROUTINE URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,EHFeigenup,EH
                !do Cdft * Coo
                !AZ something wrong here 6/6, degen poles arent showing degen D2 
                print*,'Before copying KS Cocc * semiHF Vocc'
+               !Ctilde
                Cup(:,1:Neup) = matmul(Cup(:,1:Neup),coo)!AZ fill with c*coo 
                Cup(:,(Neup+1):NB) = matmul(Cup(:,(Neup+1):NB),cvv)!AZ fill with c*cvv 
                Cdown = Cup 
                EHFeigenup(1:Neup) = eoo(1:Neup) 
                EHFeigenup((Neup+1):NB) = evv(1:(NB-Neup)) 
                EHFeigendown = EHFeigenup
+ 
+               !AZ possibly, CtildeT occ Fmu,nu Ctilde virt
+               !now we have Fov tilde; bobBril Singles -Fia/etilde(a)-etilde(i)
+
                 print*,'EHFeigenup'
                 do i=1,NB
                   print*,EHFeigenup(i)

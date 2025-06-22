@@ -15,7 +15,7 @@ PROGRAM uquantchem
       CHARACTER(Len=20) :: date,time,zone
       INTEGER :: NLINES,I,J,K,L,M,NB,NBAUX,Ne,MULTIPLICITY,Lmax,LmaxAUX,MESH(3),NVMC,IOSA,FNATOMS,NSTEPS,NLSPOINTS,PORDER,ZEROSCFTYPE
       INTEGER*8 :: NRED,FNRED
-      LOGICAL :: finns,WRITECICOEF,WRITEDENS,WHOMOLUMO,LEXCSP,SPINCONSERVE,RESTRICT,APPROXEE,HYBRID,USEGTO,CORRALCUSP,VMCCALC,HFORBWRITE,CFORCE,RELAXN,WRITEONFLY,MOVIE,MOLDYN,BSURHF,ANGtoAU
+      LOGICAL :: finns,WRITECICOEF,WRITEDENS,WHOMOLUMO,LEXCSP,SPINCONSERVE,RESTRICT,APPROXEE,HYBRID,USEGTO,CORRALCUSP,VMCCALC,HFORBWRITE,CFORCE,RELAXN,WRITEONFLY,MOVIE,MOLDYN,BSURHF,ANGtoAU,semiHF
       DOUBLE PRECISION, ALLOCATABLE :: S(:,:),T(:,:),V(:,:),H0(:,:),Intsv(:),EIGENVECT(:,:),Ints(:,:,:,:),gradIntsv(:,:,:),SINV(:,:),DMAT(:,:),GVG(:,:)
       DOUBLE PRECISION, ALLOCATABLE :: gradS(:,:,:,:),gradT(:,:,:,:),gradV(:,:,:,:),PEXu(:,:,:),PEXd(:,:,:),PEXuu(:,:,:),PEXdd(:,:,:),Pupp(:,:),Pdownn(:,:)
       DOUBLE PRECISION, ALLOCATABLE :: EHFeigenup(:),EHFeigendown(:),Cup(:,:),Cdown(:,:),H00(:,:),DPTENSOR(:,:,:),DIPOLET(:,:),WRI(:,:,:),gradWRI(:,:,:,:,:)
@@ -35,6 +35,7 @@ PROGRAM uquantchem
       DOUBLE PRECISION :: MIXTDDFT,SCERR,FIELDDIR(3),TRANSCOORD(3,3),cosTH,sinTH,cosFI,sinFI,RIKTNING(3)
 !AZ 3/30/25
       DOUBLE PRECISION, ALLOCATABLE :: Cref1(:,:),Cref2(:,:) !for imom
+      DOUBLE PRECISION,ALLOCATABLE :: tempVec(:) !AZ 6/8/25  
 !AZ 3/30/25 
       !-------------------
       !STARTING THE CLOCK: 
@@ -65,7 +66,7 @@ PROGRAM uquantchem
       & SAMPLERATE,NREPLICAS,TIMESTEP,TEND,TSTART,BETA,BJASTROW,CJASTROW,NPERSIST,NRECALC,CUTTOFFFACTOR,MIX,DIISORD,DIISSTART,HYBRID,rc,CORRALCUSP,NVMC,HFORBWRITE, &
       & IOSA,CFORCE,RELAXN,NSTEPS,DR,FTol,NLSPOINTS,PORDER,WRITEONFLY,MOVIE,MOLDYN,TEMPERATURE,ZEROSCF,XLBOMD,kappa,alpha,DORDER,PULAY,FIXNSCF,NLEBEDEV,NCHEBGAUSS, &
       & EETOL,RELALGO,ZEROSCFTYPE,ETEMP,IORBNR,AORBS,DIISORDEX,DOTDFT,OMEGA,EDIR,NEPERIOD,EPROFILE,EFIELDMAX,ADEF,DOABSSPECTRUM,DIFFDENS,AFORCE,DRF,&
-      & NSCCORR,MIXTDDFT,SCERR,RIAPPROX,LIMPRECALC,DIAGDG,FIELDDIR,FIELDREAD,DAMPING,DKHORDER,ANGtoAU)
+      & NSCCORR,MIXTDDFT,SCERR,RIAPPROX,LIMPRECALC,DIAGDG,FIELDDIR,FIELDREAD,DAMPING,DKHORDER,ANGtoAU,semiHF)
 
 !AZ 4/1/25
 !Convert Bohr to Angstrom if ANGtoAU is true
@@ -917,7 +918,10 @@ PROGRAM uquantchem
                         !ENDIF
 
                         IF ( DFTC ) THEN    
-                                CALL DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
+                                print*,'S before DFT' !AZ S before dft 
+                                tempVec = RESHAPE(S, [NB*NB]) !AZ
+                                print*,'smallest val in S',minval(tempVec) !AZ
+                                CALL DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
                                 & ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,-1,.TRUE.,SCRATCH,.FALSE.,ETEMPE,mu,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
                                 IF ( DOTDFT ) THEN
                                         Pupc = Pup
@@ -943,8 +947,8 @@ PROGRAM uquantchem
                                 CALL PRINTENERGYEIGENVAL(BAS,EHFeigenup,EHFeigendown,Cup,Cdown,.FALSE.)
                                 CALL PRINTDIPOLETENSOR(BAS,Cup,Cdown)
                                 !AZ 6/5/25 do DFT-SCF 1 cycle of HF
-                                print*,'S after DFT' 
-                                call print_matrix_full_real(6,S,NB,NB)!AZ S after dft 
+!                                print*,'S after DFT' 
+!                                call print_matrix_full_real(6,S,NB,NB)!AZ S after dft 
                                 print*,'ONE SHOT HF AFTER DFT'
                                 BSURHF = .false.
                                 print*,'DFTC',DFTC
@@ -958,7 +962,7 @@ PROGRAM uquantchem
                         ENDIF
                         
                         IF ( NATOMS .GT. 1 ) CALL mulliken(NATOMS,ATOMS,BAS,Pup+Pdown,S,ZMUL)
-
+                        
                         IF ( IORBNR(1) .NE. 0 .AND. DFTC ) THEN
                                 IF ( ABS(IORBNR(1)) .GT. NB ) THEN
                                         IORBNR(1) = NB
@@ -1107,7 +1111,7 @@ PROGRAM uquantchem
                         ENDDO
                  ENDIF
 
-
+                
                 DEALLOCATE(Intsv)
 !AZ12/17             
                 IF ( CORRLEVEL .EQ. 'EP2'  ) CALL EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
@@ -1133,14 +1137,28 @@ PROGRAM uquantchem
                 !call print_matrix_full_real(6,CUP,NB,NB)
                 !PRINT*,'Ints(1,1,1,1)',Ints(1,1,1,1) 
                 PRINT*,'If doing HF-on-top-DFT, must semicanon Fockian'
-                IF ( CORRLEVEL .EQ. 'B3LYP'  ) CALL EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
-                                             ETOT-nucE,nuce,SPINCONSERVE)
+!                IF ( CORRLEVEL .EQ. 'B3LYP'  ) CALL EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+!                                             ETOT-nucE,nuce,SPINCONSERVE)
 
 
                 IF ( CORRLEVEL .EQ. 'EP3so'  ) CALL EP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
                 IF ( CORRLEVEL .EQ. 'EPL3so'  ) CALL EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
+                !AZ DFT and L3
+!                IF ( CORRLEVEL .EQ. 'B3LYP' .and. semiHF .eqv. .true.) &
+!                                             CALL EPL3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+!                                             ETOT-nucE,nuce,SPINCONSERVE)
+                !AZ DFT and L3+B
+!                IF ( CORRLEVEL .EQ. 'B3LYP' .and. semiHF .eqv. .true.) &
+!                                             CALL EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+!                                             ETOT-nucE,nuce,SPINCONSERVE)
+               !AZ DFT and P3
+                IF ( CORRLEVEL .EQ. 'B3LYP' .and. semiHF .eqv. .true.) &
+                                                CALL EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+                                             ETOT-nucE,nuce,SPINCONSERVE)
+ 
+
                 IF ( CORRLEVEL .EQ. 'EPP3so'  ) CALL EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
                 IF ( CORRLEVEL .EQ. 'EP2plus3r'  ) CALL EP2plus3r(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&

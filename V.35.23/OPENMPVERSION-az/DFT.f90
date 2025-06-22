@@ -1,4 +1,4 @@
-SUBROUTINE DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
+SUBROUTINE DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,LORDER,CGORDER,LQ,CGQ,nucE,Tol,EHFeigenup,EHFeigendown, &
 & ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,DIISSTART,NSCF,FIXNSCF,POUT,SCRATCH,ZEROSCF,ETEMP,mu,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
       ! This subroutine calculates the self consistent DFT solution
       USE datatypemodule
@@ -7,7 +7,7 @@ SUBROUTINE DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,N
       TYPE(ATOM), INTENT(IN) :: ATOMS(NATOMS)
       TYPE(BASIS), INTENT(IN)  :: BAS
       LOGICAL, INTENT(IN) :: POUT,SCRATCH,ZEROSCF,RIAPPROX
-      INTEGER, INTENT(IN) :: NB,Ne,FIXNSCF,LORDER,CGORDER,NATOMS,NTOTALQUAD,Q1(NTOTALQUAD),Q2(NTOTALQUAD),Q3(NTOTALQUAD),NBAUX
+      INTEGER, INTENT(IN) :: NB,Ne,FIXNSCF,LORDER,CGORDER,NATOMS,NTOTALQUAD,Q1(NTOTALQUAD),Q2(NTOTALQUAD),Q3(NTOTALQUAD),NBAUX,MULTIPLICITY
       INTEGER*8, INTENT(IN) :: NRED
       INTEGER, INTENT(INOUT) :: DIISORD,DIISSTART
       INTEGER, INTENT(OUT) :: NSCF
@@ -19,17 +19,20 @@ SUBROUTINE DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,N
       DOUBLE PRECISION :: Fup(NB,NB),Fdown(NB,NB),G(NB,NB),C1(NB,NB),C2(NB,NB),C3(NB,NB),C4(NB,NB),DE,EOLD,DELTAP,LAMDAu,LAMDAd,MIXING,L2u(NB,NB),L2d(NB,NB)
       DOUBLE PRECISION :: PTold(NB,NB),Pupold(NB,NB),Pdownold(NB,NB),Pups(50,NB,NB),Pdowns(50,NB,NB),Pupt(NB,NB),Pdownt(NB,NB),TOLDNe
       DOUBLE PRECISION :: Lx2u(NB,NB),Ly2u(NB,NB),Lz2u(NB,NB),Lx2d(NB,NB),Ly2d(NB,NB),Lz2d(NB,NB)
-      DOUBLE PRECISION :: Vxc(2,NB,NB),TESTA(NB,NB),ERRSU(50,NB,NB),ERRSD(50,NB,NB),ERRU(NB,NB),ERRD(NB,NB),SH(NB,NB),SL(NB,NB),LAM(NB),EIGENVECT(NB,NB)
+      DOUBLE PRECISION :: Vxc(2,NB,NB),TESTA(NB,NB),ERRSU(50,NB,NB),ERRSD(50,NB,NB),ERRU(NB,NB),ERRD(NB,NB),SH(NB,NB),SL(NB,NB),LAM(NB),EIGENVECT(NB,NB),Sz,twoSP1,Nalpha,Nbeta
       DOUBLE PRECISION :: LSHIFTU(NB,NB),LSHIFTD(NB,NB),shift,CSHu(NB,NB),CSHd(NB,NB),FSHu(NB,NB),FSHd(NB,NB)
-      INTEGER :: I,II,III,L,M,N,Neup,Nedown,INFO1,INFO2,RESET
+      INTEGER :: I,J,II,III,L,M,N,Neup,Nedown,INFO1,INFO2,RESET
       INTEGER :: MAXITER
       DOUBLE PRECISION, EXTERNAL :: exc,quadcheck
       INTEGER, EXTERNAL :: ijkl
       LOGICAL :: STARTPRINTDIISIFO
+ !AZ 8/23
+      DOUBLE PRECISION, ALLOCATABLE :: SABMO(:,:)
+      DOUBLE PRECISION :: SSIJ,S2,temp 
         
       MIXING  = MIX(1)
       shift = MIX(2)
-
+      print*,'level-shift',shift !AZ
       IF ( FIXNSCF .GT. 0 ) THEN
               MAXITER = FIXNSCF-1
       ELSE
@@ -38,6 +41,7 @@ SUBROUTINE DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,N
       RESET = 0
       ! Calculating the lowdin S^(-1/2) matrix
       CALL diagh( S,NB,LAM,EIGENVECT)
+      print*,'small eval S', minval(LAM)!AZ smallest e-val of S
       SL = 0.0d0
       DO I=1,NB
         SL(I,I) = 1.0d0/sqrt(LAM(I))
@@ -59,8 +63,31 @@ SUBROUTINE DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,N
               DIISORD = 25
       ENDIF
 
-      Neup   = ( Ne - MOD(Ne,2) )/2
-      Nedown = ( Ne + MOD(Ne,2) )/2
+      !AZ 
+      !fix double precision print
+      !2sp1 = 2s+1 
+      twoSP1 = Multiplicity
+      Sz = ((twoSP1) - 1) / 2
+      if(Sz.eq.0) then
+        Neup = (Ne / 2)
+        Nedown = (Ne / 2)
+      elseif(Sz.ne.0) then
+        Nbeta  = (Ne-(Sz/0.5)) / 2
+        Nalpha = NBeta + (Sz/0.5)
+        Neup = Nalpha
+        Nedown=Nbeta
+      endif
+
+      write(*,*)
+      print*,'Sz',Sz
+      print*,'Multiplicity',MULTIPLICITY
+      print*,'NAlpha',Neup
+      print*,'NBeta',Nedown
+      print*,'NBas',NB
+      write(*,*)
+
+!      Neup   = ( Ne - MOD(Ne,2) )/2
+!      Nedown = ( Ne + MOD(Ne,2) )/2
 
       Pups = 0.0d0
       Pdowns = 0.0d0
@@ -156,7 +183,7 @@ SUBROUTINE DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,N
                                 CALL makedensT(TOLDNe,Cup,Cdown,EHFeigenup,EHFeigendown,ETEMP,NB,Ne,Pup,Pdown,mu,ENTROPY)
                         ENDIF
                 ENDIF
-                
+
                 PT = Pup + Pdown
                
                 ! Calculating the change of the total density matrix:
@@ -381,6 +408,27 @@ SUBROUTINE DFT(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,S,gradS,H0,Intsv,N
                 WRITE(*,'(A75,F9.6)')'     The exact number of electrons calculated from the trace of P*S, Ne =  ',SUM(PT*S)
                 WRITE(*,'(A75,F9.6)' )'Number of electrons calculated from integrating the charge-density, Ne =  ',quadcheck(CORRLEVEL,NATOMS,ATOMS,NTOTALQUAD,Q1,Q2,Q3,BAS,&
                                                                                                   & Pup,Pdown,gradS,LORDER,CGORDER,LQ,CGQ)
+!AZ 6/22/25
+                        ALLOCATE(SABMO(NB,NB))
+                        !SABMO  = Ca*.S.Cb 
+                        SABMO = matmul(matmul(transpose(Cup),S),Cdown)
+                        SSIJ=0.0d0
+                        do i=1, neup !nalpha
+                          do j=1, nedown !nbeta
+                             SSIJ = SSIJ + SABMO(i,j)**(2.0d0)
+                          enddo
+                        enddo
+                            !S2  = sz(sz+1) + nB - |Sij|^2 
+                            S2  = Sz*(Sz+1.0d0) + (Nedown*1.0d0) - SSIJ
+                            print*,'Nalpha',Neup
+                            print*,'Nbeta',Nedown
+                            print*,'SSIJ',SSIJ
+                            print*,'Sz(Sz+1)=', Sz*(Sz+1.0d0)
+                            print*,'S2=',S2
+
+
+                        DEALLOCATE(SABMO)
+!AZ 6/22/25
              ENDIF
      ELSE
              print*,'---------------------------------------------------------'
