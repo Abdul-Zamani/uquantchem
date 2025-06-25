@@ -1093,7 +1093,7 @@ PROGRAM uquantchem
                 ENDIF
                 
 !AZ8/25                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' ) THEN
-                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'toEP2' .OR. CORRLEVEL .EQ. 'gcEP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' .OR. CORRLEVEL .EQ. 'B3LYP') THEN
+                IF ( CORRLEVEL .EQ. 'CISD' .OR. CORRLEVEL .EQ. 'MP2' .OR. CORRLEVEL .EQ. 'EP2' .OR. CORRLEVEL .EQ. 'toEP2' .OR. CORRLEVEL .EQ. 'gcEP2' .OR. CORRLEVEL .EQ. 'EP2so' .OR. CORRLEVEL .EQ. 'EP3so' .OR. CORRLEVEL .EQ. 'EPP3so' .OR. CORRLEVEL .EQ. 'EP2plus3r' .OR. CORRLEVEL .EQ. 'EPQ3so' .OR. CORRLEVEL .EQ. 'EPP3plus' .OR. CORRLEVEL .EQ. 'EPQ3plus'.OR. CORRLEVEL .EQ. 'EPL3so' .OR. CORRLEVEL .EQ. 'EPL3plusB' .OR. CORRLEVEL .EQ. 'EP2pt5so' .OR. CORRLEVEL .EQ. 'EP2nD' .OR. CORRLEVEL .EQ. 'UEP2' .OR. CORRLEVEL .EQ. 'UEP2nD' .OR. CORRLEVEL .EQ. 'EP2r' .OR. CORRLEVEL .EQ. 'EP3r' .OR. CORRLEVEL .EQ. 'LDA'.OR. CORRLEVEL .EQ. 'PBE'.OR. CORRLEVEL .EQ. 'B3LYP') THEN
                         !print*,'========================================================'
                         !print*,'  Tranfering (ij|kl) from vector to tensor form         '
                         !print*,'========================================================'
@@ -1154,8 +1154,8 @@ PROGRAM uquantchem
 !                                             CALL EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
 !                                             ETOT-nucE,nuce,SPINCONSERVE)
                !AZ DFT and P3
-                IF ( CORRLEVEL .EQ. 'B3LYP' .and. semiHF .eqv. .true.) &
-                                                CALL EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+                IF ( DFTC .EQV. .TRUE. .and. semiHF .eqv. .true.) &
+                                                CALL EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
  
 
