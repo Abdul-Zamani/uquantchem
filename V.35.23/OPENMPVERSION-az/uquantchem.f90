@@ -952,10 +952,14 @@ PROGRAM uquantchem
                                 print*,'ONE SHOT HF AFTER DFT'
                                 BSURHF = .false.
                                 print*,'DFTC',DFTC
+!AZ 7/26 make zeroscf false in INPUTFILE for now to do regular dft
+                                print*,'ZEROSCF',ZEROSCF!7/26
+                                IF(ZEROSCF.eqv..true.) then !7/26
                                 CALL URHF(S,H0,Intsv,NB,NRED,Ne,MULTIPLICITY,BSURHF,nucE,Tol,&
                                           EHFeigenup,EHFeigendown,ETOT,Cup,Cdown,Pup,Pdown,MIX,DIISORD,&
-                                          DIISSTART,NSCF,2,.TRUE.,SCRATCH,.TRUE.,& !FIXNSCF=2 for MAXITER=1, ZEROSCF is after SCRATCH
+                                          DIISSTART,NSCF,2,.TRUE.,SCRATCH,ZEROSCF,& !FIXNSCF=2 for MAXITER=1, ZEROSCF is after SCRATCH
                                           ETEMP,ENTROPY,NBAUX,VRI,WRI,RIAPPROX)
+                                ENDIF 
                                 print*,'NSCF right after URHF one shot',NSCF 
                                 print*,'RIGHT AFTER CALL URHF FOR 1 CYCLE'
                                 !AZ 6/5/25
@@ -1113,6 +1117,8 @@ PROGRAM uquantchem
 
                 
                 DEALLOCATE(Intsv)
+!AZ 7/22/24 doesnt work for low spin atoms lol
+
 !AZ12/17             
                 IF ( CORRLEVEL .EQ. 'EP2'  ) CALL EP2(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
@@ -1137,7 +1143,7 @@ PROGRAM uquantchem
                 !call print_matrix_full_real(6,CUP,NB,NB)
                 !PRINT*,'Ints(1,1,1,1)',Ints(1,1,1,1) 
                 PRINT*,'If doing HF-on-top-DFT, must semicanon Fockian'
-!                IF ( CORRLEVEL .EQ. 'B3LYP'  ) CALL EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
+!                IF ( CORRLEVEL .EQ. 'EP2so'  ) CALL EP2so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
 !                                             ETOT-nucE,nuce,SPINCONSERVE)
 
 
@@ -1153,11 +1159,12 @@ PROGRAM uquantchem
 !                IF ( CORRLEVEL .EQ. 'B3LYP' .and. semiHF .eqv. .true.) &
 !                                             CALL EPL3plusB(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
 !                                             ETOT-nucE,nuce,SPINCONSERVE)
+               print*,'DFTC,semiHF',DFTC,semiHF
                !AZ DFT and P3
-                IF ( DFTC .EQV. .TRUE. .and. semiHF .eqv. .true.) &
+                IF ( DFTC .EQV. .TRUE. .and. semiHF .eqv. .true.) then 
                                                 CALL EPP3plus(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
- 
+                ENDIF 
 
                 IF ( CORRLEVEL .EQ. 'EPP3so'  ) CALL EPP3so(MULTIPLICITY,Cup,Cdown,Ints,NB,Ne,EHFeigenup,EHFeigendown,&
                                              ETOT-nucE,nuce,SPINCONSERVE)
